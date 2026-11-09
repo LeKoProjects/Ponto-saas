@@ -49,6 +49,8 @@ class ContextCache
             'cnpj' => $employee->company->cnpj,
             'legal_name' => $employee->company->legal_name,
             'company_name' => $employee->company->displayName(),
+            'logo_url' => $employee->company->logoUrl(),
+            'privacy_email' => $employee->company->privacy_email,
             'require_location' => (bool) $employee->company->require_location,
             'schedule' => [
                 'name' => $employee->workSchedule->name,

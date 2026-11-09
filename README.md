@@ -54,6 +54,16 @@ npm run dev                  # http://localhost:5173
 
 O Postgres do container fica na porta **5433** do host (para não conflitar com um Postgres local). Altere com `DB_HOST_PORT`.
 
+```bash
+# E-mails (comprovante, esqueci minha senha) caem no Mailpit: http://localhost:8025
+docker compose up -d mailpit
+php artisan queue:work            # os e-mails saem pela fila
+
+# Certificado de TESTE para assinar o AFD (sem valor legal)
+php artisan ponto:certificado-teste
+php artisan storage:link          # logo das empresas
+```
+
 ### Tudo em Docker
 
 ```bash
@@ -103,12 +113,32 @@ Cobrem os critérios de pronto do plano:
 | Comprovante | Na tela da PWA e por e-mail (fila): data, hora, NSR, CNPJ, empregador, trabalhador, CPF e hash. |
 | Auditoria | `audit_logs` grava antes/depois de toda ação do RH e do admin. |
 
+## Segurança do acesso
+
+| Item | Como |
+| --- | --- |
+| Token do app | Sanctum, prefixo `ponto_`, permissão `ponto` (só tokens do login do app valem na API), um por aparelho liberado |
+| Expiração | Por inatividade: sem uso por `PONTO_TOKEN_IDLE_DAYS` (30) dias o app volta ao login; cada uso renova o prazo. `ponto:limpar-tokens` roda às 03:00 |
+| Revogação imediata | Sair, RH desconectar/liberar outro aparelho, colaborador desativado e troca de senha apagam os tokens |
+| Esqueci minha senha | Painel (`/esqueci-senha`) e app (`/api/esqueci-senha`). Link de 60 min, uso único, enviado pela fila; resposta igual exista ou não o e-mail; limite por IP e por e-mail. A troca derruba os tokens, mas o aparelho continua liberado |
+| Armazenamento no app | O token fica no `localStorage`. Em produção, sirva a PWA com HTTPS e cabeçalho CSP restrito (`script-src 'self'`) |
+
+## Arquivos fiscais (Portaria 671/2021)
+
+Painel → **Arquivos fiscais** (dono/RH): baixa um `.zip` com o **AFD** (`.txt`, leiaute 003, ISO-8859-1, CR+LF) e a **assinatura destacada `.p7s`**.
+
+- Registros: cabeçalho (tipo 1), marcações do REP-P (tipo 7, com hash SHA-256 encadeado) e trailer (tipo 9), mais a linha `ASSINATURA_DIGITAL_EM_ARQUIVO_P7S`.
+- Assinatura **CAdES-BES** quando o OpenSSL do servidor é 3.2+ (imagem Docker), senão CMS destacado. Certificado A1 em `storage/app/private/certs/ponto.pfx` (`PONTO_CERT_PATH`/`PONTO_CERT_PASSWORD`).
+- Para valor legal: certificado **ICP-Brasil** (e-CNPJ A1) do desenvolvedor, `PONTO_DEVELOPER_CNPJ` e `PONTO_INPI_REGISTRATION` preenchidos.
+- Pendente (validar com o especialista): registros tipo 2, 4, 5 e 6 com NSR próprio, **AEJ** e comprovante em PDF assinado (PAdES).
+
 ## Endpoints da API (PWA)
 
 Todos via `POST`, autenticados com `Authorization: Bearer <token>`.
 
 | Rota | Descrição |
 | --- | --- |
+| `/api/esqueci-senha` | `email` → envia o link de nova senha (sem autenticação) |
 | `/api/login` | `email`, `password`, `device_id` (UUID do aparelho), `device_name` → `token` + `device` (status do vínculo) |
 | `/api/aparelho` | status do aparelho do token (o app consulta enquanto aguarda o RH) |
 | `/api/me` | dados do funcionário, marcações de hoje, próximo tipo, hora do servidor |
@@ -128,8 +158,10 @@ Todos via `POST`, autenticados com `Authorization: Bearer <token>`.
 - [x] Sprint 5 — Espelho PDF/CSV, auditoria, tratamentos
 - [x] Espelho em calendário na PWA + solicitação de ajuste pelo colaborador com aprovação no painel
 - [x] Localização obrigatória configurável pelo RH
-- [ ] Sprint 6 — Deploy na VPS, backup testado (restore real), monitoramento, termos e privacidade
-- [ ] Fase 2 — Anexo de atestado na solicitação, banco de horas, WhatsApp, cobrança recorrente, AFD/AEJ assinados, INPI e atestado técnico
+- [x] Política de privacidade (LGPD), logo por empresa, esqueci minha senha, endurecimento do token
+- [x] AFD com assinatura CAdES (.p7s)
+- [ ] Sprint 6 — Deploy na VPS, backup testado (restore real), monitoramento, termos de uso
+- [ ] Fase 2 — Anexo de atestado na solicitação, banco de horas, WhatsApp, cobrança recorrente, AEJ, registros 2/4/5/6 do AFD, comprovante PAdES, INPI e atestado técnico
 
 ## Limitações conhecidas do MVP
 

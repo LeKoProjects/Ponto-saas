@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class Company extends Model
 {
@@ -16,7 +17,7 @@ class Company extends Model
         'empresa' => ['label' => 'Empresa', 'price' => 199, 'max_employees' => 80],
     ];
 
-    protected $fillable = ['cnpj', 'legal_name', 'trade_name', 'plan', 'status', 'timezone', 'require_location'];
+    protected $fillable = ['cnpj', 'legal_name', 'trade_name', 'plan', 'status', 'timezone', 'require_location', 'logo_path', 'privacy_email'];
 
     protected $casts = ['require_location' => 'boolean'];
 
@@ -40,6 +41,23 @@ class Company extends Model
     public function maxEmployees(): int
     {
         return self::PLANS[$this->plan]['max_employees'] ?? 10;
+    }
+
+    /** URL pública da logo (painel, app e e-mail). */
+    public function logoUrl(): ?string
+    {
+        return $this->logo_path ? Storage::disk('public')->url($this->logo_path) : null;
+    }
+
+    /** Logo embutida (data URI) para o PDF — o DomPDF não precisa buscar arquivo nem URL. */
+    public function logoDataUri(): ?string
+    {
+        if (! $this->logo_path || ! Storage::disk('public')->exists($this->logo_path)) {
+            return null;
+        }
+        $disk = Storage::disk('public');
+
+        return 'data:'.$disk->mimeType($this->logo_path).';base64,'.base64_encode($disk->get($this->logo_path));
     }
 
     public function displayName(): string

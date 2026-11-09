@@ -7,6 +7,9 @@ use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\DeviceController;
 use App\Http\Controllers\Web\EmployeeController;
+use App\Http\Controllers\Web\FiscalFileController;
+use App\Http\Controllers\Web\PasswordResetController;
+use App\Http\Controllers\Web\PrivacyController;
 use App\Http\Controllers\Web\SettingsController;
 use App\Http\Controllers\Web\TeamController;
 use App\Http\Controllers\Web\TimesheetController;
@@ -15,9 +18,17 @@ use Illuminate\Support\Facades\Route;
 
 // Painel RH / gestor / admin SaaS (Inertia + Vue). Telas via GET, ações via POST.
 
+Route::get('/privacidade', PrivacyController::class)->name('privacy');
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'show'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
+
+    // Esqueci minha senha (o link do e-mail serve para painel e app).
+    Route::get('/esqueci-senha', [PasswordResetController::class, 'request'])->name('password.request');
+    Route::post('/esqueci-senha', [PasswordResetController::class, 'send'])->middleware('throttle:password')->name('password.email');
+    Route::get('/redefinir-senha/{token}', [PasswordResetController::class, 'edit'])->name('password.reset');
+    Route::post('/redefinir-senha', [PasswordResetController::class, 'update'])->middleware('throttle:password')->name('password.update');
 });
 
 Route::middleware(['auth', 'tenant'])->group(function () {
@@ -67,7 +78,12 @@ Route::middleware(['auth', 'tenant'])->group(function () {
 
         Route::get('/auditoria', [AuditLogController::class, 'index'])->name('audit.index');
 
+        Route::get('/arquivos-fiscais', [FiscalFileController::class, 'index'])->name('fiscal.index');
+        Route::get('/arquivos-fiscais/afd', [FiscalFileController::class, 'afd'])->name('fiscal.afd');
+
         Route::get('/configuracoes', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('/configuracoes', [SettingsController::class, 'update'])->name('settings.update');
+        Route::post('/configuracoes/logo', [SettingsController::class, 'uploadLogo'])->name('settings.logo');
+        Route::post('/configuracoes/logo/remover', [SettingsController::class, 'removeLogo'])->name('settings.logo.remove');
     });
 });

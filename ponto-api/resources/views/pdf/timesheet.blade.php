@@ -18,6 +18,9 @@
     </style>
 </head>
 <body>
+    @if ($logo = $company->logoDataUri())
+        <img src="{{ $logo }}" style="max-height:40px;max-width:160px;float:right" alt="">
+    @endif
     <h1>Espelho de Ponto — {{ ucfirst($r['period']['label']) }}</h1>
     <div class="muted">{{ $company->legal_name }} — CNPJ {{ $company->cnpj }}</div>
     <div><b>{{ $r['employee']['name'] }}</b> · CPF {{ $r['employee']['cpf'] }} · Matrícula {{ $r['employee']['registration'] ?? '—' }} · Jornada {{ $r['employee']['schedule'] }}</div>

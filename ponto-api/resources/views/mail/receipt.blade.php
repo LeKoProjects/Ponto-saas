@@ -1,6 +1,9 @@
 <!doctype html>
 <html lang="pt-BR">
 <body style="font-family: Arial, sans-serif; color:#222">
+    @if (!empty($logo))
+        <img src="{{ $logo }}" alt="{{ $r['empregador'] }}" style="max-height:56px;max-width:200px;margin-bottom:8px">
+    @endif
     <h2 style="margin-bottom:4px">Comprovante de Registro de Ponto do Trabalhador</h2>
     <p style="margin-top:0;color:#666">REP-P — Portaria MTP nº 671/2021</p>
     <table cellpadding="6" style="border-collapse:collapse">

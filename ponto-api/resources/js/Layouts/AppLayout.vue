@@ -23,6 +23,7 @@ const menu = computed(() => {
             { href: '/jornadas', icon: 'clock', label: 'Jornadas' },
             { href: '/equipes', icon: 'diagram-3', label: 'Equipes' },
             { href: '/auditoria', icon: 'shield-check', label: 'Auditoria' },
+            { href: '/arquivos-fiscais', icon: 'file-earmark-lock', label: 'Arquivos fiscais' },
             { href: '/configuracoes', icon: 'gear', label: 'Configurações' },
         );
     }
@@ -37,6 +38,7 @@ const logout = () => router.post('/logout');
     <div class="d-lg-flex">
         <aside class="sidebar bg-dark text-white p-3 d-flex flex-column">
             <div class="mb-4">
+                <img v-if="company?.logo_url" :src="company.logo_url" alt="" class="sidebar-logo mb-2" />
                 <div class="fs-5 fw-bold"><i class="bi bi-fingerprint"></i> Ponto SaaS</div>
                 <small class="text-white-50">{{ company?.name ?? 'Administração' }}</small>
             </div>

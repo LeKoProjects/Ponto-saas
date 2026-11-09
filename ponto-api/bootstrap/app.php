@@ -8,6 +8,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Routing\Middleware\SubstituteBindings;
+use Laravel\Sanctum\Http\Middleware\CheckForAnyAbility;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -23,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant' => SetTenant::class,
             'role' => EnsureRole::class,
             'device' => EnsureDeviceApproved::class,
+            'ability' => CheckForAnyAbility::class,
         ]);
 
         // O tenant precisa estar definido ANTES do route model binding,

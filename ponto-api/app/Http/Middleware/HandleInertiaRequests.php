@@ -27,7 +27,12 @@ class HandleInertiaRequests extends Middleware
                     'role_label' => User::ROLES[$user->role] ?? $user->role,
                     'can_manage' => $user->canManage(),
                 ] : null,
-                'company' => $user?->company ? ['id' => $user->company->id, 'name' => $user->company->displayName(), 'plan' => $user->company->plan] : null,
+                'company' => $user?->company ? [
+                    'id' => $user->company->id,
+                    'name' => $user->company->displayName(),
+                    'plan' => $user->company->plan,
+                    'logo_url' => $user->company->logoUrl(),
+                ] : null,
             ],
             // Badge do menu "Ajustes": solicitações aguardando decisão.
             'pending_adjustments' => fn () => $user?->company_id && $user->hasRole('owner', 'rh', 'gestor')
