@@ -59,7 +59,7 @@ O Postgres do container fica na porta **5433** do host (para não conflitar com 
 docker compose up -d mailpit
 php artisan queue:work            # os e-mails saem pela fila
 
-# Certificado de TESTE para assinar o AFD (sem valor legal)
+# Certificado de TESTE para assinar o AFD (sem valor legal). Senha na exportação: teste123
 php artisan ponto:certificado-teste
 php artisan storage:link          # logo das empresas
 ```
@@ -128,7 +128,7 @@ Cobrem os critérios de pronto do plano:
 Painel → **Arquivos fiscais** (dono/RH): baixa um `.zip` com o **AFD** (`.txt`, leiaute 003, ISO-8859-1, CR+LF) e a **assinatura destacada `.p7s`**.
 
 - Registros: cabeçalho (tipo 1), marcações do REP-P (tipo 7, com hash SHA-256 encadeado) e trailer (tipo 9), mais a linha `ASSINATURA_DIGITAL_EM_ARQUIVO_P7S`.
-- Assinatura **CAdES-BES** quando o OpenSSL do servidor é 3.2+ (imagem Docker), senão CMS destacado. Certificado A1 em `storage/app/private/certs/ponto.pfx` (`PONTO_CERT_PATH`/`PONTO_CERT_PASSWORD`).
+- Assinatura **CAdES-BES** quando o OpenSSL do servidor é 3.2+ (imagem Docker), senão CMS destacado. Certificado A1 em `storage/app/private/certs/ponto.pfx` (`PONTO_CERT_PATH`). A **senha do certificado é digitada na tela a cada exportação** (POST, não vai na URL, não é salva nem registrada); senha errada fica na auditoria e há limite de 10 tentativas por minuto.
 - Para valor legal: certificado **ICP-Brasil** (e-CNPJ A1) do desenvolvedor, `PONTO_DEVELOPER_CNPJ` e `PONTO_INPI_REGISTRATION` preenchidos.
 - Pendente (validar com o especialista): registros tipo 2, 4, 5 e 6 com NSR próprio, **AEJ** e comprovante em PDF assinado (PAdES).
 

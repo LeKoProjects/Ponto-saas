@@ -4,10 +4,14 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use RuntimeException;
 
 /**
  * Assinatura destacada (.p7s) dos arquivos oficiais com o certificado A1 (.pfx) do desenvolvedor.
+ *
+ * A senha do certificado NÃO fica guardada no servidor: quem exporta digita na hora,
+ * ela é usada só na memória durante a assinatura e descartada.
  *
  * - Preferência: OpenSSL 3.2+ com "-cades" → CAdES-BES (inclui o atributo signingCertificateV2),
  *   o formato pedido pela Portaria 671/2021 para o AFD.
@@ -20,39 +24,39 @@ class SignatureService
 {
     public function configured(): bool
     {
-        return Storage::disk('local')->exists((string) config('ponto.certificate.path'));
+        return Storage::disk('local')->exists($this->path());
     }
 
-    /** @return array{subject: string, issuer: string, valid_to: string, icp_brasil: bool}|null */
+    /**
+     * Dados públicos do certificado (titular, emissor, validade), guardados na última
+     * vez em que ele foi aberto com a senha. Não exigem senha para exibir.
+     *
+     * @return array{subject: string, issuer: string, valid_to: string, icp_brasil: bool}|null
+     */
     public function certificateInfo(): ?array
     {
         if (! $this->configured()) {
             return null;
         }
-        ['cert' => $cert] = $this->loadPfx();
-        $info = openssl_x509_parse($cert);
-        $issuer = $info['issuer']['O'] ?? $info['issuer']['CN'] ?? '';
+        $json = Storage::disk('local')->get($this->infoPath());
 
-        return [
-            'subject' => $info['subject']['CN'] ?? '',
-            'issuer' => $info['issuer']['CN'] ?? $issuer,
-            'valid_to' => date('d/m/Y', $info['validTo_time_t']),
-            'icp_brasil' => str_contains(strtoupper($issuer), 'ICP-BRASIL'),
-        ];
+        return $json ? json_decode($json, true) : null;
     }
 
     /**
-     * Assina o conteúdo e devolve o .p7s em DER.
+     * Assina o conteúdo com a senha digitada e devolve o .p7s em DER.
      *
      * @return array{p7s: string, profile: string}
+     *
+     * @throws ValidationException senha incorreta (campo "password")
      */
-    public function signDetached(string $content): array
+    public function signDetached(string $content, #[\SensitiveParameter] string $password): array
     {
         if (! $this->configured()) {
-            throw new RuntimeException('Certificado digital não configurado. Defina PONTO_CERT_PATH/PONTO_CERT_PASSWORD ou rode "php artisan ponto:certificado-teste" em desenvolvimento.');
+            throw new RuntimeException('Certificado digital não instalado. Em desenvolvimento, rode "php artisan ponto:certificado-teste".');
         }
 
-        ['cert' => $cert, 'key' => $key, 'chain' => $chain] = $this->loadPfx();
+        ['cert' => $cert, 'key' => $key, 'chain' => $chain] = $this->open($password);
 
         $dir = storage_path('app/private/tmp/sign-'.bin2hex(random_bytes(8)));
         mkdir($dir, 0700, true);
@@ -69,7 +73,7 @@ class SignatureService
             @chmod($files['key'], 0600);
 
             if ($this->opensslSupportsCades()) {
-                $cmd = ['openssl', 'cms', '-sign', '-binary', '-cades', '-md', 'sha256', '-outform', 'DER',
+                $cmd = [config('ponto.openssl_bin'), 'cms', '-sign', '-binary', '-cades', '-md', 'sha256', '-outform', 'DER',
                     '-in', $files['in'], '-signer', $files['cert'], '-inkey', $files['key'], '-out', $files['out']];
                 if ($chain) {
                     array_push($cmd, '-certfile', $files['chain']);
@@ -99,16 +103,45 @@ class SignatureService
         }
     }
 
-    /** @return array{cert: string, key: string, chain: array<int, string>} */
-    private function loadPfx(): array
+    /**
+     * Abre o .pfx com a senha e atualiza os dados públicos exibidos no painel.
+     *
+     * @return array{cert: string, key: string, chain: array<int, string>}
+     */
+    public function open(#[\SensitiveParameter] string $password): array
     {
-        $pfx = Storage::disk('local')->get((string) config('ponto.certificate.path'));
+        $pfx = Storage::disk('local')->get($this->path());
 
-        if (! openssl_pkcs12_read($pfx, $out, (string) config('ponto.certificate.password'))) {
-            throw new RuntimeException('Não foi possível abrir o certificado (.pfx): senha incorreta ou arquivo inválido.');
+        if (! openssl_pkcs12_read($pfx, $out, $password)) {
+            throw ValidationException::withMessages(['password' => 'Senha do certificado incorreta.']);
         }
 
+        $this->rememberInfo($out['cert']);
+
         return ['cert' => $out['cert'], 'key' => $out['pkey'], 'chain' => $out['extracerts'] ?? []];
+    }
+
+    private function rememberInfo(string $certPem): void
+    {
+        $info = openssl_x509_parse($certPem);
+        $issuer = $info['issuer']['O'] ?? $info['issuer']['CN'] ?? '';
+
+        Storage::disk('local')->put($this->infoPath(), json_encode([
+            'subject' => $info['subject']['CN'] ?? '',
+            'issuer' => $info['issuer']['CN'] ?? $issuer,
+            'valid_to' => date('d/m/Y', $info['validTo_time_t']),
+            'icp_brasil' => str_contains(strtoupper($issuer), 'ICP-BRASIL'),
+        ]));
+    }
+
+    private function path(): string
+    {
+        return (string) config('ponto.certificate.path');
+    }
+
+    private function infoPath(): string
+    {
+        return $this->path().'.json';
     }
 
     private function opensslSupportsCades(): bool
@@ -116,7 +149,7 @@ class SignatureService
         static $supported = null;
 
         if ($supported === null) {
-            $result = rescue(fn () => Process::run(['openssl', 'cms', '-help']), null, false);
+            $result = rescue(fn () => Process::run([config('ponto.openssl_bin'), 'cms', '-help']), null, false);
             $supported = $result !== null && str_contains($result->output().$result->errorOutput(), '-cades');
         }
 

@@ -79,7 +79,8 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::get('/auditoria', [AuditLogController::class, 'index'])->name('audit.index');
 
         Route::get('/arquivos-fiscais', [FiscalFileController::class, 'index'])->name('fiscal.index');
-        Route::get('/arquivos-fiscais/afd', [FiscalFileController::class, 'afd'])->name('fiscal.afd');
+        // POST: a senha do certificado vai no corpo. Limite contra tentativa de adivinhar a senha.
+        Route::post('/arquivos-fiscais/afd', [FiscalFileController::class, 'afd'])->middleware('throttle:10,1')->name('fiscal.afd');
 
         Route::get('/configuracoes', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('/configuracoes', [SettingsController::class, 'update'])->name('settings.update');

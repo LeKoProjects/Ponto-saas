@@ -45,6 +45,8 @@ class HandleInertiaRequests extends Middleware
             'pending_devices' => fn () => $user?->company_id && $user->canManage()
                 ? Device::forCompany($user->company_id)->where('status', 'pendente')->count()
                 : 0,
+            // Para formulários enviados direto pelo navegador (ex.: download do AFD).
+            'csrf_token' => fn () => csrf_token(),
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
