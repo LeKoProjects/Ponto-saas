@@ -7,6 +7,7 @@ use App\Http\Resources\TimeEntryResource;
 use App\Models\TimeEntry;
 use App\Models\User;
 use App\Services\TimeEntryService;
+use App\Support\ContextCache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -50,26 +51,32 @@ class AuthController extends Controller
 
     public function me(Request $request, TimeEntryService $service): JsonResponse
     {
-        $user = $request->user();
-        $employee = $user->employee()->with('workSchedule', 'company')->firstOrFail();
+        $ctx = ContextCache::employee($request->user());
+        abort_unless($ctx, 404, 'Usuário sem cadastro de funcionário.');
 
-        $today = TimeEntry::where('employee_id', $employee->id)
-            ->whereBetween('marked_at', [now()->startOfDay(), now()->endOfDay()])
-            ->orderBy('marked_at')
-            ->get();
+        $today = $service->today($ctx['company_id'], $ctx['employee_id']);
+        $next = TimeEntryService::nextTypeAfter($today->count());
 
         return response()->json([
-            'user' => ['name' => $user->name, 'email' => $user->email],
-            'company' => $employee->company->displayName(),
-            'schedule' => [
-                'name' => $employee->workSchedule->name,
-                'start' => substr($employee->workSchedule->start_time, 0, 5),
-                'end' => substr($employee->workSchedule->end_time, 0, 5),
+            // Perfil: o app guarda localmente e exibe na hora, antes mesmo desta resposta.
+            'profile' => [
+                'employee_id' => $ctx['employee_id'],
+                'name' => $ctx['name'],
+                'email' => $ctx['email'],
+                'cpf' => $ctx['cpf'],
+                'company' => $ctx['company_name'],
+                'cnpj' => $ctx['cnpj'],
+                'schedule' => $ctx['schedule'],
+                'require_location' => $ctx['require_location'],
             ],
-            'require_location' => (bool) $employee->company->require_location,
+            // Campos antigos mantidos por compatibilidade com versões do app em cache.
+            'user' => ['name' => $ctx['name'], 'email' => $ctx['email']],
+            'company' => $ctx['company_name'],
+            'schedule' => $ctx['schedule'],
+            'require_location' => $ctx['require_location'],
             'server_time' => now()->toIso8601String(),
-            'next_type' => $service->nextType($employee),
-            'next_type_label' => TimeEntry::TYPES[$service->nextType($employee)],
+            'next_type' => $next,
+            'next_type_label' => TimeEntry::TYPES[$next],
             'today' => TimeEntryResource::collection($today),
         ]);
     }
