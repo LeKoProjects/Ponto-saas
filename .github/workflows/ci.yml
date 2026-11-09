@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  api:
+    name: API (Laravel + Postgres)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ponto-api
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: ponto_test
+          POSTGRES_USER: ponto
+          POSTGRES_PASSWORD: ponto
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ponto"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: ponto_test
+      DB_USERNAME: ponto
+      DB_PASSWORD: ponto
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: pdo_pgsql, pgsql, mbstring, intl, zip, gd, bcmath, pcntl
+          coverage: none
+
+      - name: Composer install
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ponto-api/package-lock.json
+
+      - name: Build do painel
+        run: npm ci && npm run build
+
+      - name: Preparar ambiente
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Estilo (Pint)
+        run: vendor/bin/pint --test
+
+      - name: Testes (Pest)
+        run: php artisan test
+
+  pwa:
+    name: PWA (Vue)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ponto-pwa
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ponto-pwa/package-lock.json
+      - run: npm ci
+      - run: npm run build
