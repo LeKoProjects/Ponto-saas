@@ -152,11 +152,16 @@ onMounted(load);
             </button>
         </div>
 
-        <div v-if="error" class="alert alert-danger py-2">{{ error }}</div>
-        <div v-if="notice" class="alert alert-success py-2">{{ notice }}</div>
+        <Transition name="alert">
+            <div v-if="error" class="alert alert-danger py-2">{{ error }}</div>
+        </Transition>
+        <Transition name="alert">
+            <div v-if="notice" class="alert alert-success py-2"><i class="bi bi-check-circle-fill"></i> {{ notice }}</div>
+        </Transition>
 
         <!-- Calendário -->
-        <div v-show="showCalendar" class="calendar mb-1" :class="{ 'opacity-50': loading }">
+        <Transition name="collapse">
+        <div v-show="showCalendar" class="calendar mb-1" :class="{ loading }">
             <div class="cal-grid cal-head">
                 <div v-for="(w, i) in WEEK" :key="i">{{ w }}</div>
             </div>
@@ -187,16 +192,24 @@ onMounted(load);
                 <span><i class="dot bg-danger"></i> falta</span>
             </div>
         </div>
+        </Transition>
         <div class="text-center">
             <button class="btn btn-link text-secondary" :aria-label="showCalendar ? 'Recolher calendário' : 'Mostrar calendário'" @click="showCalendar = !showCalendar">
-                <i :class="showCalendar ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
+                <i class="bi bi-chevron-up chevron" :class="{ flipped: !showCalendar }"></i>
             </button>
         </div>
 
         <!-- Dia selecionado -->
-        <div class="divider-date"><span class="badge text-bg-primary fs-6 px-3 py-2">{{ selected ? brDate(selected) : '—' }}</span></div>
+        <div class="divider-date">
+            <Transition name="fade" mode="out-in">
+                <span :key="selected" class="badge text-bg-primary fs-6 px-3 py-2">{{ selected ? brDate(selected) : '—' }}</span>
+            </Transition>
+        </div>
 
-        <div v-if="!day" class="text-center text-muted py-3">Sem dados para este dia.</div>
+        <Transition name="day" mode="out-in">
+        <div :key="selected + (report ? 'r' : '')">
+        <div v-if="!report" class="text-center py-4"><span class="spinner-border spinner-border-sm text-primary"></span></div>
+        <div v-else-if="!day" class="text-center text-muted py-3">Sem dados para este dia.</div>
         <template v-else>
             <div v-if="day.holiday" class="text-center mb-2"><span class="badge text-bg-info">{{ day.holiday }}</span></div>
 
@@ -250,17 +263,24 @@ onMounted(load);
                 <p v-if="day.is_future" class="small text-muted text-center mt-2 mb-0">Não é possível ajustar dias futuros.</p>
             </div>
         </template>
+        </div>
+        </Transition>
 
         <!-- Formulário (bottom sheet) -->
+        <Teleport to="body">
+        <Transition name="sheet">
         <div v-if="form" class="sheet-backdrop" @click.self="form = null">
             <form class="sheet" @submit.prevent="submit">
+                <div class="sheet-handle"></div>
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h3 class="h5 mb-0">{{ ACTIONS[form.type].title }}</h3>
                     <button type="button" class="btn-close" aria-label="Fechar" @click="form = null"></button>
                 </div>
                 <p class="small text-muted mb-3">{{ brDate(selected) }} · {{ ACTIONS[form.type].help }}</p>
 
-                <div v-if="formError" class="alert alert-danger py-2 small">{{ formError }}</div>
+                <Transition name="alert">
+                    <div v-if="formError" class="alert alert-danger py-2 small">{{ formError }}</div>
+                </Transition>
 
                 <div v-if="form.type !== 'inclusao'" class="mb-3">
                     <label class="form-label small fw-semibold">Qual batida?</label>
@@ -288,6 +308,8 @@ onMounted(load);
                 </button>
             </form>
         </div>
+        </Transition>
+        </Teleport>
     </div>
 </template>
 
@@ -302,6 +324,12 @@ onMounted(load);
     color: #6c757d;
     padding: 6px 0;
 }
+.calendar {
+    transition: opacity var(--base) var(--ease);
+}
+.calendar.loading {
+    opacity: 0.5;
+}
 .cal-day {
     border: 0;
     background: none;
@@ -313,6 +341,14 @@ onMounted(load);
     display: flex;
     flex-direction: column;
     align-items: center;
+    transition:
+        background-color var(--base) var(--ease),
+        color var(--base) var(--ease),
+        transform var(--fast) var(--ease),
+        box-shadow var(--base) var(--ease);
+}
+.cal-day:active:not(:disabled) {
+    transform: scale(0.9);
 }
 .cal-day.off {
     color: #8a929a;
@@ -326,6 +362,7 @@ onMounted(load);
 .cal-day.selected {
     background: var(--bs-primary);
     color: #fff;
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
 }
 .cal-day.selected .text-primary {
     color: #fff !important;
@@ -342,15 +379,18 @@ onMounted(load);
     border-radius: 50%;
     vertical-align: middle;
 }
+.chevron {
+    display: inline-block;
+    transition: transform var(--base) var(--ease);
+}
+.chevron.flipped {
+    transform: rotate(180deg);
+}
 .divider-date {
     text-align: center;
     border-top: 1px solid #dee2e6;
     margin: 8px 0 16px;
     line-height: 0;
-}
-.divider-date .badge {
-    position: relative;
-    top: 0;
 }
 .action-btn {
     border: 0;
@@ -360,6 +400,7 @@ onMounted(load);
     align-items: center;
     gap: 4px;
     color: #343a40;
+    transition: opacity var(--base) var(--ease);
 }
 .action-btn:disabled {
     opacity: 0.35;
@@ -373,23 +414,45 @@ onMounted(load);
     align-items: center;
     justify-content: center;
     font-size: 1.6rem;
+    transition:
+        transform var(--fast) var(--ease),
+        background-color var(--base) var(--ease),
+        color var(--base) var(--ease);
 }
-.sheet-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.45);
-    z-index: 1050;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
+.action-btn:not(:disabled):hover .action-icon {
+    background: #dbe7ff;
+    color: var(--bs-primary);
 }
-.sheet {
-    background: #fff;
-    width: 100%;
-    max-width: 480px;
-    border-radius: 20px 20px 0 0;
-    padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
-    max-height: 90vh;
-    overflow-y: auto;
+.action-btn:not(:disabled):active .action-icon {
+    transform: scale(0.9);
+}
+
+/* Troca de dia: conteúdo esmaece e sobe levemente */
+.day-enter-active,
+.day-leave-active {
+    transition:
+        opacity var(--fast) var(--ease),
+        transform var(--base) var(--ease);
+}
+.day-enter-from {
+    opacity: 0;
+    transform: translateY(8px);
+}
+.day-leave-to {
+    opacity: 0;
+}
+
+/* Recolher/expandir calendário */
+.collapse-enter-active,
+.collapse-leave-active {
+    transition:
+        opacity var(--base) var(--ease),
+        transform var(--base) var(--ease);
+    transform-origin: top;
+}
+.collapse-enter-from,
+.collapse-leave-to {
+    opacity: 0;
+    transform: scaleY(0.96) translateY(-8px);
 }
 </style>
