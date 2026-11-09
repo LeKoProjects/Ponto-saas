@@ -46,6 +46,11 @@ class Employee extends Model
         return $this->hasMany(TimeAdjustment::class);
     }
 
+    public function devices(): HasMany
+    {
+        return $this->hasMany(Device::class);
+    }
+
     public function maskedCpf(): string
     {
         $c = $this->cpf;

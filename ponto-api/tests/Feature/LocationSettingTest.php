@@ -28,7 +28,7 @@ it('gestor e colaborador não alteram a configuração', function () {
 
 it('com localização obrigatória, recusa batida sem GPS e aceita com GPS', function () {
     $this->c['company']->update(['require_location' => true]);
-    $this->actingAs($this->c['employee']->user, 'sanctum');
+    $this->withToken(apiToken($this->c['employee']->user));
 
     $this->postJson('/api/me')->assertJsonPath('require_location', true);
 
@@ -41,7 +41,7 @@ it('com localização obrigatória, recusa batida sem GPS e aceita com GPS', fun
 });
 
 it('com localização desativada, registra sem GPS e descarta coordenadas enviadas', function () {
-    $this->actingAs($this->c['employee']->user, 'sanctum');
+    $this->withToken(apiToken($this->c['employee']->user));
 
     $this->postJson('/api/me')->assertJsonPath('require_location', false);
     $this->postJson('/api/ponto')->assertCreated();

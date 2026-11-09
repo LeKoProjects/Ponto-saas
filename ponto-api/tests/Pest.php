@@ -1,15 +1,41 @@
 <?php
 
 use App\Models\Company;
+use App\Models\Device;
 use App\Models\Employee;
 use App\Models\User;
 use App\Models\WorkSchedule;
 use Faker\Factory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 pest()->extend(TestCase::class)->use(RefreshDatabase::class)->in('Feature');
 pest()->extend(TestCase::class)->in('Unit');
+
+/**
+ * Token da PWA já num aparelho liberado pelo RH (o caminho normal de uso).
+ * Para testar o fluxo de liberação, use /api/login diretamente.
+ */
+function apiToken(User $user, string $deviceName = 'Aparelho de teste'): string
+{
+    $employee = Employee::withoutGlobalScope('company')->where('user_id', $user->id)->firstOrFail();
+
+    $device = Device::create([
+        'company_id' => $employee->company_id,
+        'employee_id' => $employee->id,
+        'uuid' => (string) Str::uuid(),
+        'name' => $deviceName,
+        'status' => 'aprovado',
+        'requested_at' => now(),
+        'decided_at' => now(),
+    ]);
+
+    $token = $user->createToken($deviceName, ['ponto']);
+    $token->accessToken->forceFill(['device_id' => $device->id])->save();
+
+    return $token->plainTextToken;
+}
 
 /**
  * Cria uma empresa completa: dono, RH, jornada comercial e um funcionário.

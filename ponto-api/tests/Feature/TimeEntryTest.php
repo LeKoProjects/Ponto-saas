@@ -1,12 +1,15 @@
 <?php
 
 use App\Mail\TimeEntryReceiptMail;
+use App\Models\Device;
 use App\Models\TimeEntry;
+use App\Services\DeviceService;
 use App\Services\TimeEntryService;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 /* Sprint 3 — "100 marcações seguidas sem NSR duplicado; UPDATE em time_entries bloqueado no banco". */
 
@@ -73,9 +76,14 @@ it('registra ponto pela API da PWA, devolve comprovante e envia por e-mail', fun
     Mail::fake();
     $user = $this->c['employee']->user;
 
-    $token = $this->postJson('/api/login', ['email' => $user->email, 'password' => 'password'])
-        ->assertOk()
-        ->json('token');
+    $login = $this->postJson('/api/login', [
+        'email' => $user->email, 'password' => 'password',
+        'device_id' => (string) Str::uuid(), 'device_name' => 'Pixel 8 · Android 14',
+    ])->assertOk()->assertJsonPath('device.status', 'pendente');
+    $token = $login->json('token');
+
+    // RH libera o aparelho.
+    app(DeviceService::class)->approve(Device::findOrFail($login->json('device.id')), $this->c['rh']);
 
     $this->withToken($token)
         ->postJson('/api/ponto', ['latitude' => -12.9714, 'longitude' => -38.5014, 'marked_at' => '2000-01-01 00:00:00'])
@@ -94,7 +102,7 @@ it('registra ponto pela API da PWA, devolve comprovante e envia por e-mail', fun
 
 it('aplica rate limit no endpoint de ponto', function () {
     Mail::fake();
-    $this->actingAs($this->c['employee']->user, 'sanctum');
+    $this->withToken(apiToken($this->c['employee']->user));
 
     for ($i = 0; $i < 4; $i++) {
         $this->postJson('/api/ponto')->assertCreated();
@@ -103,6 +111,6 @@ it('aplica rate limit no endpoint de ponto', function () {
 });
 
 it('não permite login na PWA de usuário sem cadastro de funcionário', function () {
-    $this->postJson('/api/login', ['email' => $this->c['rh']->email, 'password' => 'password'])
+    $this->postJson('/api/login', ['email' => $this->c['rh']->email, 'password' => 'password', 'device_id' => (string) Str::uuid(), 'device_name' => 'Teste'])
         ->assertUnprocessable();
 });

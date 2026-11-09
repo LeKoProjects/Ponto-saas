@@ -40,6 +40,7 @@ const load = async () => {
         offset.value = new Date(me.server_time).getTime() - Date.now();
         profile.value = me.profile;
         session.saveProfile(me.profile);
+        if (me.device) session.saveDevice(me.device);
         applyToday(me.today, me.next_type, me.next_type_label);
         synced.value = true;
     } catch (e) {

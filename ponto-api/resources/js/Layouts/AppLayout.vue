@@ -19,6 +19,7 @@ const menu = computed(() => {
     if (user.value?.can_manage) {
         items.push(
             { href: '/funcionarios', icon: 'people', label: 'Funcionários' },
+            { href: '/aparelhos', icon: 'phone', label: 'Aparelhos', badge: page.props.pending_devices },
             { href: '/jornadas', icon: 'clock', label: 'Jornadas' },
             { href: '/equipes', icon: 'diagram-3', label: 'Equipes' },
             { href: '/auditoria', icon: 'shield-check', label: 'Auditoria' },

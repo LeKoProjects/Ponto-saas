@@ -95,6 +95,7 @@ Cobrem os critérios de pronto do plano:
 | --- | --- |
 | Marcação imutável | Trigger `ponto_prevent_modification` bloqueia UPDATE/DELETE em `time_entries` e `audit_logs`; o model também recusa. Em produção, crie o papel `app_user` e rode as migrations: o `REVOKE` é aplicado automaticamente. |
 | Correções | Só como **tratamento** (`time_adjustments`: inclusão, exclusão/desconsideração e alteração), com justificativa e auditoria. O colaborador solicita pela PWA (fica **pendente**); RH, dono ou o gestor da equipe aprova ou rejeita (com motivo) no painel. Lançamentos do RH já entram aprovados. O espelho mostra o original riscado. |
+| Um aparelho por colaborador | O app gera um ID próprio do aparelho (mantido após sair). No 1º login nele, o pedido vai ao RH (**Aparelhos** no painel). Liberar um aparelho desconecta os outros (tokens apagados). Pendente → só `/api/aparelho` e `/api/logout` respondem. Nada é excluído: `devices` + auditoria guardam o histórico, visível também no cadastro do funcionário. |
 | Localização | Parâmetro da empresa em **Configurações** (dono/RH). Ativo: a batida só é aceita com latitude/longitude. Inativo: o app não pede e o servidor descarta coordenadas (LGPD). |
 | NSR por empregador | `companies.next_nsr` com `SELECT … FOR UPDATE` dentro da transação. |
 | Hash encadeado | `sha256(prev_hash \| employee_id \| nsr \| marked_at)`; comando `php artisan ponto:verificar-cadeia` roda todo dia às 02:00. |
@@ -108,7 +109,8 @@ Todos via `POST`, autenticados com `Authorization: Bearer <token>`.
 
 | Rota | Descrição |
 | --- | --- |
-| `/api/login` | `email`, `password` → `token` |
+| `/api/login` | `email`, `password`, `device_id` (UUID do aparelho), `device_name` → `token` + `device` (status do vínculo) |
+| `/api/aparelho` | status do aparelho do token (o app consulta enquanto aguarda o RH) |
 | `/api/me` | dados do funcionário, marcações de hoje, próximo tipo, hora do servidor |
 | `/api/ponto` | registra marcação, retorna comprovante — limite de 4/min. `latitude`/`longitude` obrigatórios se a empresa exigir localização |
 | `/api/comprovante/{id}` | comprovante de uma marcação própria |

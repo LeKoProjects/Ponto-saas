@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Company;
+use App\Models\Device;
 use App\Models\Employee;
 use App\Models\User;
 use App\Models\WorkSchedule;
@@ -38,5 +39,6 @@ class AppServiceProvider extends ServiceProvider
 
         Company::saved(fn (Company $c) => ContextCache::forgetCompany($c->id));
         WorkSchedule::saved(fn (WorkSchedule $s) => ContextCache::forgetSchedule($s->id));
+        Device::saved(fn (Device $d) => ContextCache::forgetDevice($d->id));
     }
 }

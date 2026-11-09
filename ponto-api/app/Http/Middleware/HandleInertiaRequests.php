@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Device;
 use App\Models\TimeAdjustment;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -34,6 +35,10 @@ class HandleInertiaRequests extends Middleware
                     ->where('status', 'pendente')
                     ->when($user->hasRole('gestor'), fn ($q) => $q->whereHas('employee.team', fn ($t) => $t->where('manager_user_id', $user->id)))
                     ->count()
+                : 0,
+            // Badge do menu "Aparelhos": aparelhos aguardando liberação (só dono/RH).
+            'pending_devices' => fn () => $user?->company_id && $user->canManage()
+                ? Device::forCompany($user->company_id)->where('status', 'pendente')->count()
                 : 0,
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
