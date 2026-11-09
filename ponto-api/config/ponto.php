@@ -23,10 +23,14 @@ return [
     ],
 
     // Certificado ICP-Brasil (A1, .pfx/.p12) do desenvolvedor para assinar o AFD (.p7s).
+    // A senha NÃO fica no servidor: é digitada na tela Arquivos fiscais a cada exportação.
     'certificate' => [
         'path' => env('PONTO_CERT_PATH', 'certs/ponto.pfx'), // relativo a storage/app/private
-        'password' => env('PONTO_CERT_PASSWORD', ''),
     ],
+
+    // OpenSSL de linha de comando (3.2+ assina em CAdES-BES). No Windows, aponte para o do Git:
+    // PONTO_OPENSSL_BIN="C:/Program Files/Git/mingw64/bin/openssl.exe"
+    'openssl_bin' => env('PONTO_OPENSSL_BIN', 'openssl'),
 
     // Token do app: expira se ficar sem uso por N dias (renova sozinho a cada uso).
     'token_idle_days' => (int) env('PONTO_TOKEN_IDLE_DAYS', 30),

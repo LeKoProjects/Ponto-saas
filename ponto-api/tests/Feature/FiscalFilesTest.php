@@ -61,12 +61,14 @@ it('filtra o período sem quebrar a cadeia de hash', function () {
 
 it('RH baixa o zip com AFD e assinatura .p7s e a exportação é auditada', function () {
     Storage::fake('local');
-    $this->artisan('ponto:certificado-teste')->assertSuccessful();
+    $this->artisan('ponto:certificado-teste', ['--senha' => 'segredo-123'])->assertSuccessful();
 
     $this->actingAs($this->c['rh'])->get('/arquivos-fiscais')
-        ->assertInertia(fn ($p) => $p->component('FiscalFiles/Index')->where('certificate.icp_brasil', false));
+        ->assertInertia(fn ($p) => $p->component('FiscalFiles/Index')->where('certificate_installed', true)->where('certificate.icp_brasil', false));
 
-    $res = $this->actingAs($this->c['rh'])->get('/arquivos-fiscais/afd?from=2026-11-01&to=2026-11-05')->assertOk();
+    $res = $this->actingAs($this->c['rh'])
+        ->post('/arquivos-fiscais/afd', ['from' => '2026-11-01', 'to' => '2026-11-05', 'password' => 'segredo-123'])
+        ->assertOk();
     $zipFile = $res->baseResponse->getFile()->getPathname();
 
     $zip = new ZipArchive;
@@ -91,11 +93,32 @@ it('RH baixa o zip com AFD e assinatura .p7s e a exportação é auditada', func
     }
 });
 
+it('pede a senha do certificado na exportação, recusa senha errada e não guarda a senha', function () {
+    Storage::fake('local');
+    $this->artisan('ponto:certificado-teste', ['--senha' => 'segredo-123'])->assertSuccessful();
+    $period = ['from' => '2026-11-01', 'to' => '2026-11-05'];
+
+    $this->actingAs($this->c['rh'])->post('/arquivos-fiscais/afd', $period)
+        ->assertSessionHasErrors(['password' => 'Digite a senha do certificado digital para assinar o arquivo.']);
+
+    $this->actingAs($this->c['rh'])->from('/arquivos-fiscais')->post('/arquivos-fiscais/afd', $period + ['password' => 'errada'])
+        ->assertRedirect('/arquivos-fiscais')
+        ->assertSessionHasErrors(['password' => 'Senha do certificado incorreta.'])
+        ->assertSessionMissing('_old_input.password');
+
+    $failed = AuditLog::where('action', 'fiscal.afd_signature_failed')->first();
+    expect($failed)->not->toBeNull()
+        ->and(json_encode($failed->after))->not->toContain('errada')
+        ->and(AuditLog::where('action', 'fiscal.afd_exported')->exists())->toBeFalse();
+});
+
 it('gera o AFD sem assinatura quando não há certificado, e só dono/RH acessam', function () {
     Storage::fake('local');
 
-    $this->actingAs($this->c['rh'])->get('/arquivos-fiscais/afd?from=2026-11-01&to=2026-11-05')->assertOk();
-    $this->actingAs($this->c['rh'])->get('/arquivos-fiscais/afd?from=2026-11-05&to=2026-11-01')->assertSessionHasErrors('to');
+    $this->actingAs($this->c['rh'])->get('/arquivos-fiscais')->assertInertia(fn ($p) => $p->where('certificate_installed', false));
+    $this->actingAs($this->c['rh'])->post('/arquivos-fiscais/afd', ['from' => '2026-11-01', 'to' => '2026-11-05'])->assertOk();
+    $this->actingAs($this->c['rh'])->post('/arquivos-fiscais/afd', ['from' => '2026-11-05', 'to' => '2026-11-01'])->assertSessionHasErrors('to');
+    $this->actingAs($this->c['rh'])->get('/arquivos-fiscais/afd?from=2026-11-01&to=2026-11-05')->assertMethodNotAllowed();
     $this->actingAs($this->c['employee']->user)->get('/arquivos-fiscais')->assertForbidden();
 });
 

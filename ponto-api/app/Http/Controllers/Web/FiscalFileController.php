@@ -8,6 +8,7 @@ use App\Services\AuditLogger;
 use App\Services\SignatureService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -18,30 +19,35 @@ class FiscalFileController extends Controller
 {
     public function __construct(private AfdService $afd, private SignatureService $signer, private AuditLogger $audit) {}
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
         return Inertia::render('FiscalFiles/Index', [
-            'certificate' => rescue(fn () => $this->signer->certificateInfo(), null, false),
-            'certificate_error' => $this->signer->configured() && ! rescue(fn () => $this->signer->certificateInfo(), null, false)
-                ? 'O certificado configurado não abriu: confira a senha (PONTO_CERT_PASSWORD).'
-                : null,
+            'certificate_installed' => $this->signer->configured(),
+            'certificate' => $this->signer->certificateInfo(),
             'inpi' => (string) config('ponto.afd.inpi_registration'),
             'developer' => (string) config('ponto.afd.developer_document'),
             'defaults' => [
-                'from' => now()->startOfMonth()->toDateString(),
-                'to' => now()->toDateString(),
+                'from' => $request->old('from', now()->startOfMonth()->toDateString()),
+                'to' => $request->old('to', now()->toDateString()),
             ],
         ]);
     }
 
-    /** Baixa um .zip com o AFD (.txt) e a assinatura destacada (.p7s). */
+    /**
+     * Baixa um .zip com o AFD (.txt) e a assinatura destacada (.p7s).
+     * POST: a senha do certificado vai no corpo (nunca na URL) e não é guardada.
+     */
     public function afd(Request $request): BinaryFileResponse
     {
+        $installed = $this->signer->configured();
+
         $data = $request->validate([
             'from' => ['required', 'date'],
             'to' => ['required', 'date', 'after_or_equal:from', 'before_or_equal:today'],
+            'password' => [$installed ? 'required' : 'nullable', 'string', 'max:200'],
         ], [
             'to.before_or_equal' => 'A data final não pode ser no futuro.',
+            'password.required' => 'Digite a senha do certificado digital para assinar o arquivo.',
         ]);
 
         $company = $request->user()->company;
@@ -51,7 +57,13 @@ class FiscalFileController extends Controller
         $afd = $this->afd->generate($company, $from, $to);
         $base = sprintf('AFD_%s_%s_%s', preg_replace('/\D/', '', $company->cnpj), $from->format('Ymd'), $to->format('Ymd'));
 
-        $signature = $this->signer->configured() ? $this->signer->signDetached($afd['content']) : null;
+        try {
+            $signature = $installed ? $this->signer->signDetached($afd['content'], $data['password']) : null;
+        } catch (ValidationException $e) {
+            // Tentativa com senha errada fica na auditoria (sem a senha).
+            $this->audit->log('fiscal.afd_signature_failed', $company, null, ['reason' => 'senha incorreta']);
+            throw $e;
+        }
 
         $zipPath = tempnam(sys_get_temp_dir(), 'afd');
         $zip = new ZipArchive;
