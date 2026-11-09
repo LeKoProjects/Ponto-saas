@@ -1,21 +1,67 @@
 :root {
     --ponto-primary: #0d6efd;
+    /* Movimento: uma curva e três durações para o painel inteiro. */
+    --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --fast: 160ms;
+    --base: 220ms;
+    --slow: 300ms;
 }
 
+/* ---------- Menu lateral ---------- */
 .sidebar {
     width: 240px;
     min-height: 100vh;
 }
 
 .sidebar .nav-link {
+    position: relative;
     color: rgba(255, 255, 255, 0.75);
     border-radius: 0.375rem;
+    transition:
+        background-color var(--base) var(--ease),
+        color var(--base) var(--ease),
+        padding-left var(--base) var(--ease);
 }
 
-.sidebar .nav-link.active,
 .sidebar .nav-link:hover {
     color: #fff;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
+    padding-left: 1.25rem;
+}
+
+.sidebar .nav-link.active {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.14);
+}
+
+/* Barrinha azul que entra no item ativo */
+.sidebar .nav-link::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 20%;
+    bottom: 20%;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--ponto-primary);
+    transform: scaleY(0);
+    transition: transform var(--base) var(--ease);
+}
+
+.sidebar .nav-link.active::before {
+    transform: scaleY(1);
+}
+
+/* ---------- Cartões e tabelas ---------- */
+.card {
+    transition:
+        transform var(--base) var(--ease),
+        box-shadow var(--base) var(--ease);
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.08) !important;
 }
 
 .stat-card .display-6 {
@@ -25,6 +71,51 @@
 .table td,
 .table th {
     vertical-align: middle;
+}
+
+.table > tbody > tr {
+    transition: background-color var(--fast) var(--ease);
+}
+
+/* Linhas surgem em leve cascata ao carregar a tela */
+.table > tbody > tr {
+    animation: row-in var(--slow) var(--ease) both;
+}
+.table > tbody > tr:nth-child(2) { animation-delay: 20ms; }
+.table > tbody > tr:nth-child(3) { animation-delay: 40ms; }
+.table > tbody > tr:nth-child(4) { animation-delay: 60ms; }
+.table > tbody > tr:nth-child(5) { animation-delay: 80ms; }
+.table > tbody > tr:nth-child(n + 6) { animation-delay: 100ms; }
+
+@keyframes row-in {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.btn {
+    transition:
+        color var(--fast) var(--ease),
+        background-color var(--fast) var(--ease),
+        border-color var(--fast) var(--ease),
+        box-shadow var(--fast) var(--ease),
+        transform var(--fast) var(--ease);
+}
+
+.btn:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+.form-control,
+.form-select {
+    transition:
+        border-color var(--base) var(--ease),
+        box-shadow var(--base) var(--ease);
 }
 
 .mark-strike {
@@ -37,9 +128,111 @@
     font-weight: 600;
 }
 
+/* ---------- Modais próprios (v-if + d-block) ---------- */
+.modal.d-block {
+    animation: backdrop-in var(--base) var(--ease) both;
+}
+
+.modal.d-block .modal-dialog {
+    animation: dialog-in var(--slow) var(--ease) both;
+}
+
+@keyframes backdrop-in {
+    from {
+        background-color: rgba(0, 0, 0, 0);
+    }
+}
+
+@keyframes dialog-in {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* Modal de loading do Bootstrap mais suave */
+#loadingModal.fade .modal-dialog {
+    transition: transform var(--base) var(--ease);
+    transform: scale(0.96);
+}
+
+#loadingModal.show .modal-dialog {
+    transform: none;
+}
+
+/* ================= Transições do Vue ================= */
+
+/* Troca de página */
+.page-enter-active,
+.page-leave-active {
+    transition:
+        opacity var(--base) var(--ease),
+        transform var(--base) var(--ease);
+}
+.page-enter-from {
+    opacity: 0;
+    transform: translateY(8px);
+}
+.page-leave-to {
+    opacity: 0;
+}
+
+/* Alertas de sucesso/erro */
+.alert-enter-active,
+.alert-leave-active {
+    transition:
+        opacity var(--base) var(--ease),
+        transform var(--base) var(--ease);
+}
+.alert-enter-from,
+.alert-leave-to {
+    opacity: 0;
+    transform: translateY(-8px);
+}
+
+/* Contador do menu */
+.pop-enter-active {
+    animation: pop var(--slow) var(--ease);
+}
+.pop-leave-active {
+    transition: opacity var(--fast) var(--ease);
+}
+.pop-leave-to {
+    opacity: 0;
+}
+
+@keyframes pop {
+    0% {
+        transform: scale(0.4);
+        opacity: 0;
+    }
+    70% {
+        transform: scale(1.15);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
 @media (max-width: 991.98px) {
     .sidebar {
         width: 100%;
         min-height: auto;
+    }
+}
+
+/* Quem pediu menos movimento no sistema não vê animações. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 1ms !important;
+        animation-delay: 0ms !important;
+        transition-duration: 1ms !important;
     }
 }

@@ -24,7 +24,7 @@ const submit = async () => {
 </script>
 
 <template>
-    <div class="pt-5">
+    <div class="pt-5 enter-up">
         <div class="text-center mb-4">
             <img src="/favicon.svg" width="72" height="72" alt="" class="mb-3" />
             <h1 class="h3 fw-bold">Registro de ponto</h1>

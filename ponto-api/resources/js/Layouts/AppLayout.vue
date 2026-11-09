@@ -42,7 +42,9 @@ const logout = () => router.post('/logout');
             <nav class="nav nav-pills flex-column gap-1 mb-auto">
                 <Link v-for="item in menu" :key="item.href" :href="item.href" class="nav-link" :class="{ active: isActive(item.href) }">
                     <i :class="`bi bi-${item.icon} me-2`"></i>{{ item.label }}
-                    <span v-if="item.badge" class="badge rounded-pill text-bg-warning ms-1">{{ item.badge }}</span>
+                    <Transition name="pop">
+                        <span v-if="item.badge" :key="item.badge" class="badge rounded-pill text-bg-warning ms-1">{{ item.badge }}</span>
+                    </Transition>
                 </Link>
             </nav>
             <div class="border-top border-secondary pt-3 mt-3">
@@ -53,9 +55,22 @@ const logout = () => router.post('/logout');
         </aside>
 
         <main class="flex-grow-1 p-3 p-lg-4">
-            <div v-if="flash.success" class="alert alert-success alert-dismissible">{{ flash.success }}</div>
-            <div v-if="flash.error" class="alert alert-danger">{{ flash.error }}</div>
-            <slot />
+            <Transition name="alert">
+                <div v-if="flash.success" :key="flash.success" class="alert alert-success d-flex align-items-center gap-2">
+                    <i class="bi bi-check-circle-fill"></i>{{ flash.success }}
+                </div>
+            </Transition>
+            <Transition name="alert">
+                <div v-if="flash.error" :key="flash.error" class="alert alert-danger d-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-triangle-fill"></i>{{ flash.error }}
+                </div>
+            </Transition>
+            <!-- Troca de página: só anima quando muda a tela (filtros e paginação não piscam). -->
+            <Transition name="page" mode="out-in">
+                <div :key="page.component">
+                    <slot />
+                </div>
+            </Transition>
         </main>
     </div>
 </template>

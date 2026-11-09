@@ -17,6 +17,8 @@ const error = ref('');
 const loading = ref(false);
 const status = ref(''); // texto auxiliar durante a batida
 const receipt = ref(null);
+const success = ref(false); // botão verde com ✓ logo após registrar
+let successTimer;
 
 // Relógio exibido com base na hora do SERVIDOR (offset calculado no /me).
 const offset = ref(0);
@@ -81,9 +83,14 @@ const punch = async () => {
         const res = await sendPunch(body);
 
         // A resposta já traz tudo: comprovante, marcações de hoje e próximo tipo.
-        receipt.value = res.receipt;
         applyToday(res.today, res.next_type, res.next_type_label);
         if (navigator.vibrate) navigator.vibrate(80);
+
+        // Confirmação visual curta antes de abrir o comprovante.
+        success.value = true;
+        clearTimeout(successTimer);
+        successTimer = setTimeout(() => (success.value = false), 1600);
+        setTimeout(() => (receipt.value = res.receipt), 450);
     } catch (e) {
         error.value = e.message;
         // A regra de GPS pode ter mudado: atualiza o perfil.
@@ -108,6 +115,7 @@ onMounted(() => {
 });
 onUnmounted(() => {
     clearInterval(tick);
+    clearTimeout(successTimer);
     geo.stop();
 });
 </script>
@@ -128,16 +136,23 @@ onUnmounted(() => {
             <small v-if="profile" class="text-muted">Jornada {{ profile.schedule.start }}–{{ profile.schedule.end }}</small>
         </div>
 
-        <div v-if="error" class="alert alert-danger">{{ error }}</div>
+        <Transition name="alert">
+            <div v-if="error" class="alert alert-danger">{{ error }}</div>
+        </Transition>
 
         <div class="text-center mb-4">
-            <button class="btn btn-primary punch-btn" :disabled="loading || !profile" @click="punch">
-                <template v-if="loading">
-                    <span class="spinner-border"></span>
-                    <span v-if="status" class="d-block small mt-2">{{ status }}</span>
-                </template>
-                <template v-else><i class="bi bi-fingerprint"></i>{{ nextTypeLabel }}</template>
-            </button>
+            <span class="punch-wrap" :class="{ busy: loading, done: success }">
+                <button class="btn btn-primary punch-btn" :class="{ success }" :disabled="loading || success || !profile" @click="punch">
+                    <template v-if="success"><i class="bi bi-check-lg"></i>Registrado!</template>
+                    <template v-else-if="loading">
+                        <span class="spinner-border"></span>
+                        <Transition name="fade" mode="out-in">
+                            <span v-if="status" :key="status" class="d-block small mt-2">{{ status }}</span>
+                        </Transition>
+                    </template>
+                    <template v-else><i class="bi bi-fingerprint"></i>{{ nextTypeLabel }}</template>
+                </button>
+            </span>
         </div>
 
         <p v-if="profile?.require_location" class="text-center small text-muted mb-4">
@@ -150,26 +165,27 @@ onUnmounted(() => {
                 Marcações de hoje
                 <span v-if="!synced" class="spinner-border spinner-border-sm text-secondary" title="Atualizando"></span>
             </div>
-            <ul class="list-group list-group-flush">
+            <TransitionGroup tag="ul" name="list" class="list-group list-group-flush">
                 <li v-for="e in entries" :key="e.id" class="list-group-item d-flex justify-content-between align-items-center">
                     <span><b>{{ e.time.slice(0, 5) }}</b> · {{ e.type_label }}</span>
                     <button class="btn btn-sm btn-link" @click="showReceipt(e.id)">Comprovante</button>
                 </li>
-                <li v-if="!entries.length" class="list-group-item text-muted text-center">Nenhuma marcação hoje.</li>
-            </ul>
+                <li v-if="!entries.length" key="empty" class="list-group-item text-muted text-center">Nenhuma marcação hoje.</li>
+            </TransitionGroup>
         </div>
 
-        <!-- Comprovante -->
-        <div v-if="receipt" class="modal d-block" style="background: rgba(0,0,0,.45)" @click.self="receipt = null">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title"><i class="bi bi-check-circle-fill text-success"></i> Ponto registrado</h5>
-                        <button class="btn-close" aria-label="Fechar" @click="receipt = null"></button>
-                    </div>
-                    <div class="modal-body small">
-                        <p class="text-muted mb-2">Comprovante de Registro de Ponto do Trabalhador</p>
-                        <dl class="row mb-0">
+        <!-- Comprovante (folha inferior) -->
+        <Teleport to="body">
+            <Transition name="sheet">
+                <div v-if="receipt" class="sheet-backdrop" @click.self="receipt = null">
+                    <div class="sheet" role="dialog" aria-labelledby="receipt-title">
+                        <div class="sheet-handle"></div>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h5 id="receipt-title" class="mb-0"><i class="bi bi-check-circle-fill text-success"></i> Ponto registrado</h5>
+                            <button class="btn-close" aria-label="Fechar" @click="receipt = null"></button>
+                        </div>
+                        <p class="text-muted small mb-3">Comprovante de Registro de Ponto do Trabalhador</p>
+                        <dl class="row small mb-0">
                             <dt class="col-4">Data</dt><dd class="col-8">{{ receipt.data }}</dd>
                             <dt class="col-4">Hora</dt><dd class="col-8 fs-5 fw-bold">{{ receipt.hora }}</dd>
                             <dt class="col-4">Tipo</dt><dd class="col-8">{{ receipt.tipo }}</dd>
@@ -180,11 +196,11 @@ onUnmounted(() => {
                             <dt class="col-4">CPF</dt><dd class="col-8">{{ receipt.cpf }}</dd>
                             <dt class="col-4">Hash</dt><dd class="col-8 hash">{{ receipt.hash }}</dd>
                         </dl>
-                        <p class="text-muted mt-2 mb-0">Uma cópia foi enviada para seu e-mail.</p>
+                        <p class="text-muted small mt-2">Uma cópia foi enviada para seu e-mail.</p>
+                        <button class="btn btn-primary btn-lg w-100" @click="receipt = null">OK</button>
                     </div>
-                    <div class="modal-footer"><button class="btn btn-primary w-100" @click="receipt = null">OK</button></div>
                 </div>
-            </div>
-        </div>
+            </Transition>
+        </Teleport>
     </div>
 </template>
