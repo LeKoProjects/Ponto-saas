@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -36,7 +37,20 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended($user->isSuperAdmin() ? route('admin.companies.index') : route('dashboard'));
+        // A "página pretendida" só vale se for do mesmo painel do perfil:
+        // admin do SaaS nunca volta para "/" e usuário de empresa nunca vai para /admin.
+        $intended = (string) $request->session()->get('url.intended', '');
+        $isAdminUrl = str_starts_with(parse_url($intended, PHP_URL_PATH) ?? '', '/admin');
+        if ($intended && $isAdminUrl !== $user->isSuperAdmin()) {
+            $request->session()->forget('url.intended');
+        }
+
+        return redirect()->intended(self::homeFor($user));
+    }
+
+    public static function homeFor(User $user): string
+    {
+        return $user->isSuperAdmin() ? route('admin.companies.index') : route('dashboard');
     }
 
     public function logout(Request $request): RedirectResponse

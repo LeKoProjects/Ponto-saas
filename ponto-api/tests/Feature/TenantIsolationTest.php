@@ -2,6 +2,7 @@
 
 use App\Models\Employee;
 use App\Models\TimeEntry;
+use App\Models\User;
 use App\Services\TimeEntryService;
 use App\Support\Tenant;
 use Faker\Factory;
@@ -76,5 +77,28 @@ it('bloqueia o painel para empresa bloqueada', function () {
 
 it('restringe perfis: funcionário não acessa o painel e RH não acessa o admin SaaS', function () {
     $this->actingAs($this->a['employee']->user)->get('/')->assertForbidden();
-    $this->actingAs($this->a['rh'])->get('/admin/empresas')->assertForbidden();
+
+    // Navegação leva à página inicial do perfil; ações continuam bloqueadas.
+    $this->actingAs($this->a['rh'])->get('/admin/empresas')->assertRedirect('/');
+    $this->actingAs($this->a['rh'])->post('/admin/empresas', [])->assertForbidden();
+});
+
+it('leva o admin do SaaS para /admin/empresas mesmo vindo de "/"', function () {
+    User::create(['name' => 'Admin', 'email' => 'admin@teste.test', 'password' => 'password', 'role' => 'super_admin']);
+
+    // Visitante abre "/" → é mandado ao login → Laravel guarda "/" como pretendida.
+    $this->get('/')->assertRedirect('/login');
+
+    $this->post('/login', ['email' => 'admin@teste.test', 'password' => 'password'])
+        ->assertRedirect('/admin/empresas');
+
+    $this->get('/')->assertRedirect('/admin/empresas');
+    $this->get('/admin/empresas')->assertOk();
+});
+
+it('leva o usuário da empresa para o painel mesmo vindo de /admin', function () {
+    $this->get('/admin/empresas')->assertRedirect('/login');
+
+    $this->post('/login', ['email' => $this->a['rh']->email, 'password' => 'password'])
+        ->assertRedirect('/');
 });
