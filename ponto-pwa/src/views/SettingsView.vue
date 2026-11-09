@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
-import { post } from '../api';
+import { post, webUrl } from '../api';
 import { describeDevice } from '../device';
 import { prefs, session } from '../session';
 
@@ -9,6 +9,7 @@ defineEmits(['logout']);
 const profile = ref(session.profile());
 const device = ref(null);
 const binding = ref(session.device()); // liberação do RH para este aparelho
+const privacyUrl = computed(() => webUrl(`/privacidade${profile.value?.company_id ? `?empresa=${profile.value.company_id}` : ''}`));
 
 // ---- Sincronização ----
 const syncing = ref(false);
@@ -145,6 +146,19 @@ onMounted(async () => {
                     </div>
                 </li>
             </ul>
+        </div>
+
+        <!-- Privacidade -->
+        <div class="section-title">Privacidade</div>
+        <div class="card border-0 shadow-sm mb-3 enter-up">
+            <a :href="privacyUrl" target="_blank" rel="noopener" class="list-group-item list-group-item-action d-flex align-items-center gap-3 p-3 border-0 rounded">
+                <i class="bi bi-shield-lock fs-4 text-primary"></i>
+                <div class="flex-grow-1">
+                    <div class="fw-semibold">Política de privacidade</div>
+                    <div class="small text-muted">Quais dados usamos, por quanto tempo e seus direitos (LGPD)</div>
+                </div>
+                <i class="bi bi-box-arrow-up-right text-muted"></i>
+            </a>
         </div>
 
         <button class="btn btn-outline-danger w-100 mb-3" @click="$emit('logout')">

@@ -9,6 +9,7 @@ x-app: &app
     DB_HOST: postgres
     DB_PORT: 5432
     REDIS_HOST: redis
+    MAIL_HOST: mailpit
   volumes:
     - ./ponto-api:/var/www/html
   depends_on:
@@ -61,6 +62,13 @@ services:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+
+  # Caixa de e-mail de desenvolvimento: tudo que o sistema envia aparece em http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:v1.21
+    ports:
+      - "1025:1025"
+      - "8025:8025"
 
   pwa:
     image: node:22-alpine

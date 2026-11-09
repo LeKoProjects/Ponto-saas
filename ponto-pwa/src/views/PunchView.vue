@@ -124,9 +124,12 @@ onUnmounted(() => {
 <template>
     <div class="pt-3">
         <div class="d-flex justify-content-between align-items-start mb-4">
-            <div>
-                <div class="fw-semibold">{{ profile?.name ?? '…' }}</div>
-                <small class="text-muted">{{ profile?.company }}</small>
+            <div class="d-flex align-items-center gap-2">
+                <img v-if="profile?.logo_url" :src="profile.logo_url" alt="" class="company-logo" />
+                <div>
+                    <div class="fw-semibold">{{ profile?.name ?? '…' }}</div>
+                    <small class="text-muted">{{ profile?.company }}</small>
+                </div>
             </div>
             <button class="btn btn-sm btn-outline-secondary" aria-label="Sair" @click="$emit('logout')"><i class="bi bi-box-arrow-right"></i></button>
         </div>

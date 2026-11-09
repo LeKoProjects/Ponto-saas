@@ -236,3 +236,22 @@
         transition-duration: 1ms !important;
     }
 }
+
+/* Logo da empresa (sidebar e configurações) */
+.sidebar-logo {
+    display: block;
+    max-width: 100%;
+    max-height: 56px;
+    object-fit: contain;
+    background: #fff;
+    border-radius: 8px;
+    padding: 4px 8px;
+}
+.logo-preview {
+    width: 160px;
+    height: 96px;
+    object-fit: contain;
+    background: repeating-conic-gradient(#f1f3f5 0% 25%, #fff 0% 50%) 50% / 16px 16px;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 8px;
+}

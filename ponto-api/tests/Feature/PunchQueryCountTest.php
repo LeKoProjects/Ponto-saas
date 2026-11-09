@@ -78,7 +78,8 @@ it('atualiza o contexto em cache quando o RH muda dados do colaborador ou da emp
     expect(ContextCache::employee($user->fresh())['name'])->toBe('Nome Novo');
 
     $this->c['employee']->update(['active' => false]);
-    $this->withToken($this->token)->postJson('/api/ponto', ['latitude' => -12.9, 'longitude' => -38.5])->assertForbidden();
+    // Desativado: o token do app é apagado na hora (o app volta ao login).
+    $this->withToken($this->token)->postJson('/api/ponto', ['latitude' => -12.9, 'longitude' => -38.5])->assertUnauthorized();
 
     $this->c['schedule']->update(['start_time' => '07:00']);
     expect(ContextCache::employee($user->fresh())['schedule']['start'])->toBe('07:00');

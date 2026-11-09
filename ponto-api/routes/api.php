@@ -7,8 +7,10 @@ use Illuminate\Support\Facades\Route;
 
 // API da PWA do funcionário (Sanctum token). Convenção do projeto: chamadas via POST.
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
+Route::post('/esqueci-senha', [AuthController::class, 'forgotPassword'])->middleware('throttle:password');
 
-Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
+// "ability:ponto": só tokens emitidos pelo login do app valem aqui.
+Route::middleware(['auth:sanctum', 'ability:ponto', 'tenant'])->group(function () {
     // Liberadas mesmo com o aparelho aguardando o RH.
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/aparelho', [AuthController::class, 'device']);

@@ -7,6 +7,7 @@ use App\Http\Resources\TimeEntryResource;
 use App\Models\TimeEntry;
 use App\Models\User;
 use App\Services\DeviceService;
+use App\Services\PasswordResetService;
 use App\Services\TimeEntryService;
 use App\Support\ContextCache;
 use Illuminate\Http\JsonResponse;
@@ -59,6 +60,15 @@ class AuthController extends Controller
         ]);
     }
 
+    /** Esqueci minha senha pelo app: o e-mail traz o link da página de nova senha. */
+    public function forgotPassword(Request $request, PasswordResetService $service): JsonResponse
+    {
+        $data = $request->validate(['email' => ['required', 'email']]);
+        $service->sendLink($data['email']);
+
+        return response()->json(['message' => PasswordResetService::SENT_MESSAGE]);
+    }
+
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()?->delete();
@@ -94,7 +104,9 @@ class AuthController extends Controller
                 'email' => $ctx['email'],
                 'cpf' => $ctx['cpf'],
                 'company' => $ctx['company_name'],
+                'company_id' => $ctx['company_id'],
                 'cnpj' => $ctx['cnpj'],
+                'logo_url' => $ctx['logo_url'] ?? null,
                 'schedule' => $ctx['schedule'],
                 'require_location' => $ctx['require_location'],
             ],

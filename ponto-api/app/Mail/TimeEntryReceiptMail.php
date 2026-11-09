@@ -26,7 +26,10 @@ class TimeEntryReceiptMail extends Mailable implements ShouldQueue
     {
         return new Content(
             view: 'mail.receipt',
-            with: ['r' => app(TimeEntryService::class)->receipt($this->entry)],
+            with: [
+                'r' => app(TimeEntryService::class)->receipt($this->entry),
+                'logo' => $this->entry->loadMissing('company')->company->logoUrl(),
+            ],
         );
     }
 }

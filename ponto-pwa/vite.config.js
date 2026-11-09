@@ -25,7 +25,11 @@ export default defineConfig({
             workbox: {
                 // A marcação NUNCA é cacheada: a hora vem do servidor.
                 navigateFallbackDenylist: [/^\/api/],
-                runtimeCaching: [{ urlPattern: /\/api\//, handler: 'NetworkOnly' }],
+                runtimeCaching: [
+                    { urlPattern: /\/api\//, handler: 'NetworkOnly' },
+                    // Logo da empresa: o nome do arquivo muda a cada envio, então pode ficar em cache.
+                    { urlPattern: /\/storage\/logos\//, handler: 'CacheFirst', options: { cacheName: 'logos', expiration: { maxEntries: 10 } } },
+                ],
             },
         }),
     ],

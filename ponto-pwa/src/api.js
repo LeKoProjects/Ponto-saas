@@ -4,6 +4,9 @@ import { session } from './session';
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 const TOKEN_KEY = 'ponto_token';
 
+/** Endereço de uma página do servidor (ex.: política de privacidade), a partir da URL da API. */
+export const webUrl = (path) => `${BASE.replace(/\/api\/?$/, '')}${path}`;
+
 export const auth = {
     get token() {
         return localStorage.getItem(TOKEN_KEY);
