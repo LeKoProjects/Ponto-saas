@@ -14,14 +14,15 @@ const menu = computed(() => {
     const items = [
         { href: '/', icon: 'speedometer2', label: 'Agora' },
         { href: '/espelho', icon: 'calendar3', label: 'Espelho de ponto' },
+        { href: '/ajustes', icon: 'pencil-square', label: 'Ajustes', badge: page.props.pending_adjustments },
     ];
     if (user.value?.can_manage) {
         items.push(
             { href: '/funcionarios', icon: 'people', label: 'Funcionários' },
             { href: '/jornadas', icon: 'clock', label: 'Jornadas' },
             { href: '/equipes', icon: 'diagram-3', label: 'Equipes' },
-            { href: '/ajustes', icon: 'pencil-square', label: 'Tratamentos' },
             { href: '/auditoria', icon: 'shield-check', label: 'Auditoria' },
+            { href: '/configuracoes', icon: 'gear', label: 'Configurações' },
         );
     }
     return items;
@@ -41,6 +42,7 @@ const logout = () => router.post('/logout');
             <nav class="nav nav-pills flex-column gap-1 mb-auto">
                 <Link v-for="item in menu" :key="item.href" :href="item.href" class="nav-link" :class="{ active: isActive(item.href) }">
                     <i :class="`bi bi-${item.icon} me-2`"></i>{{ item.label }}
+                    <span v-if="item.badge" class="badge rounded-pill text-bg-warning ms-1">{{ item.badge }}</span>
                 </Link>
             </nav>
             <div class="border-top border-secondary pt-3 mt-3">

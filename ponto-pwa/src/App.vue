@@ -29,7 +29,7 @@ onMounted(() => window.addEventListener('ponto:logout', () => (loggedIn.value = 
             <HistoryView v-else />
             <nav class="tabbar d-flex">
                 <button :class="{ active: tab === 'ponto' }" @click="tab = 'ponto'"><i class="bi bi-fingerprint"></i>Ponto</button>
-                <button :class="{ active: tab === 'historico' }" @click="tab = 'historico'"><i class="bi bi-calendar3"></i>Meu mês</button>
+                <button :class="{ active: tab === 'historico' }" @click="tab = 'historico'"><i class="bi bi-calendar3"></i>Espelho</button>
             </nav>
         </template>
     </div>

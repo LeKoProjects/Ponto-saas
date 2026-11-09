@@ -76,7 +76,7 @@ const dayEntries = computed(() => props.entries.filter((e) => !adj.date || e.dat
                         <tr v-for="d in report.days" :key="d.date" :class="{ 'text-muted': !d.is_workday }">
                             <td class="text-nowrap">{{ d.label }}</td>
                             <td>
-                                <span v-for="(m, i) in d.marks" :key="i" class="me-2" :class="{ 'mark-strike': m.discarded, 'mark-inc': m.source === 'inclusao' }" :title="m.nsr ? `NSR ${m.nsr}` : 'Inclusão por tratamento'">{{ m.time }}</span>
+                                <span v-for="(m, i) in d.marks" :key="i" class="me-2" :class="{ 'mark-strike': m.discarded, 'mark-inc': m.source !== 'original' }" :title="m.nsr ? `NSR ${m.nsr}` : m.type_label">{{ m.time }}</span>
                             </td>
                             <td>{{ fmtMinutes(d.expected_minutes) }}</td>
                             <td>{{ fmtMinutes(d.worked_minutes) }}</td>
@@ -89,6 +89,7 @@ const dayEntries = computed(() => props.entries.filter((e) => !adj.date || e.dat
                                 <span v-if="d.holiday" class="badge text-bg-info">{{ d.holiday }}</span>
                                 <span v-else-if="d.absent" class="badge text-bg-danger">Falta</span>
                                 <span v-else-if="d.incomplete" class="badge text-bg-warning">Incompleto</span>
+                                <a v-if="d.requests.some((r) => r.status === 'pendente')" href="/ajustes" class="badge text-bg-warning text-decoration-none ms-1">Ajuste pendente</a>
                             </td>
                             <td v-if="canManage"><button class="btn btn-sm btn-link p-0" title="Tratamento" @click="openAdj(d.date)"><i class="bi bi-pencil-square"></i></button></td>
                         </tr>
@@ -112,6 +113,7 @@ const dayEntries = computed(() => props.entries.filter((e) => !adj.date || e.dat
                         <label class="form-label">Tipo</label>
                         <select v-model="adj.type" class="form-select">
                             <option value="inclusao">Inclusão de marcação esquecida</option>
+                            <option value="alteracao">Alterar horário de uma marcação</option>
                             <option value="desconsideracao">Desconsiderar marcação</option>
                         </select>
                     </div>
@@ -120,15 +122,17 @@ const dayEntries = computed(() => props.entries.filter((e) => !adj.date || e.dat
                         <input v-model="adj.date" type="date" class="form-control" :class="{ 'is-invalid': adj.errors.date }" required />
                         <div class="invalid-feedback">{{ adj.errors.date }}</div>
                     </div>
-                    <div v-if="adj.type === 'inclusao'" class="mb-2">
-                        <label class="form-label">Horário</label>
-                        <input v-model="adj.time" type="time" class="form-control" :class="{ 'is-invalid': adj.errors.time }" required />
-                    </div>
-                    <div v-else class="mb-2">
+                    <div v-if="adj.type !== 'inclusao'" class="mb-2">
                         <label class="form-label">Marcação</label>
                         <select v-model="adj.time_entry_id" class="form-select" :class="{ 'is-invalid': adj.errors.time_entry_id }" required>
                             <option v-for="e in dayEntries" :key="e.id" :value="e.id">{{ e.label }}</option>
                         </select>
+                        <div class="invalid-feedback">{{ adj.errors.time_entry_id }}</div>
+                    </div>
+                    <div v-if="adj.type !== 'desconsideracao'" class="mb-2">
+                        <label class="form-label">{{ adj.type === 'alteracao' ? 'Horário correto' : 'Horário' }}</label>
+                        <input v-model="adj.time" type="time" class="form-control" :class="{ 'is-invalid': adj.errors.time }" required />
+                        <div class="invalid-feedback">{{ adj.errors.time }}</div>
                     </div>
                     <div>
                         <label class="form-label">Justificativa</label>

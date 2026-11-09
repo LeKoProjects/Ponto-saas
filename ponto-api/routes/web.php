@@ -6,6 +6,7 @@ use App\Http\Controllers\Web\AuditLogController;
 use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\EmployeeController;
+use App\Http\Controllers\Web\SettingsController;
 use App\Http\Controllers\Web\TeamController;
 use App\Http\Controllers\Web\TimesheetController;
 use App\Http\Controllers\Web\WorkScheduleController;
@@ -28,12 +29,16 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::post('/empresas/{company}', [CompanyController::class, 'update'])->name('companies.update');
     });
 
-    // Empresa: dono, RH e gestor
+    // Empresa: dono, RH e gestor (gestor vê só as próprias equipes)
     Route::middleware('role:owner,rh,gestor')->group(function () {
         Route::get('/', DashboardController::class)->name('dashboard');
         Route::get('/espelho', [TimesheetController::class, 'show'])->name('timesheet.show');
         Route::get('/espelho/pdf', [TimesheetController::class, 'pdf'])->name('timesheet.pdf');
         Route::get('/espelho/csv', [TimesheetController::class, 'csv'])->name('timesheet.csv');
+
+        Route::get('/ajustes', [AdjustmentController::class, 'index'])->name('adjustments.index');
+        Route::post('/ajustes/{adjustment}/aprovar', [AdjustmentController::class, 'approve'])->name('adjustments.approve');
+        Route::post('/ajustes/{adjustment}/rejeitar', [AdjustmentController::class, 'reject'])->name('adjustments.reject');
     });
 
     // Cadastros: dono e RH
@@ -52,9 +57,11 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::post('/equipes', [TeamController::class, 'store'])->name('teams.store');
         Route::post('/equipes/{team}', [TeamController::class, 'update'])->name('teams.update');
 
-        Route::get('/ajustes', [AdjustmentController::class, 'index'])->name('adjustments.index');
         Route::post('/ajustes', [AdjustmentController::class, 'store'])->name('adjustments.store');
 
         Route::get('/auditoria', [AuditLogController::class, 'index'])->name('audit.index');
+
+        Route::get('/configuracoes', [SettingsController::class, 'index'])->name('settings.index');
+        Route::post('/configuracoes', [SettingsController::class, 'update'])->name('settings.update');
     });
 });

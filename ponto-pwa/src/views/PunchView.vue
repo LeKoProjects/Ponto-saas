@@ -8,7 +8,7 @@ const me = ref(null);
 const error = ref('');
 const loading = ref(false);
 const receipt = ref(null);
-const useGps = ref(localStorage.getItem('ponto_gps') === '1');
+const locating = ref(false);
 
 // Relógio exibido com base na hora do SERVIDOR (offset calculado no /me).
 const offset = ref(0);
@@ -27,13 +27,28 @@ const load = async () => {
     }
 };
 
+const GEO_ERRORS = {
+    1: 'Permissão de localização negada. Libere o acesso à localização para este app nas configurações do navegador e tente de novo.',
+    2: 'Não foi possível obter sua localização. Ative o GPS do celular e tente de novo.',
+    3: 'A localização demorou para responder. Verifique o GPS e tente de novo.',
+};
+
+/** Localização: só quando a empresa exige — e aí é obrigatória. */
 const getPosition = () =>
-    new Promise((resolve) => {
-        if (!useGps.value || !navigator.geolocation) return resolve({});
+    new Promise((resolve, reject) => {
+        if (!me.value?.require_location) return resolve({});
+        if (!navigator.geolocation) return reject(new Error('Este aparelho não oferece localização, que é obrigatória na sua empresa.'));
+        locating.value = true;
         navigator.geolocation.getCurrentPosition(
-            (p) => resolve({ latitude: p.coords.latitude, longitude: p.coords.longitude }),
-            () => resolve({}),
-            { enableHighAccuracy: true, timeout: 8000 },
+            (p) => {
+                locating.value = false;
+                resolve({ latitude: p.coords.latitude, longitude: p.coords.longitude });
+            },
+            (err) => {
+                locating.value = false;
+                reject(new Error(GEO_ERRORS[err.code] ?? GEO_ERRORS[2]));
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
         );
     });
 
@@ -60,11 +75,6 @@ const showReceipt = async (id) => {
     } catch (e) {
         error.value = e.message;
     }
-};
-
-const toggleGps = () => {
-    useGps.value = !useGps.value;
-    localStorage.setItem('ponto_gps', useGps.value ? '1' : '0');
 };
 
 onMounted(() => {
@@ -94,15 +104,18 @@ onUnmounted(() => clearInterval(tick));
 
         <div class="text-center mb-4">
             <button class="btn btn-primary punch-btn" :disabled="loading || !me" @click="punch">
-                <span v-if="loading" class="spinner-border"></span>
+                <template v-if="loading">
+                    <span class="spinner-border"></span>
+                    <span v-if="locating" class="d-block small mt-2">Obtendo localização…</span>
+                </template>
                 <template v-else><i class="bi bi-fingerprint"></i>{{ me?.next_type_label ?? 'Registrar' }}</template>
             </button>
         </div>
 
-        <div class="form-check form-switch d-flex justify-content-center gap-2 mb-4">
-            <input id="gps" class="form-check-input" type="checkbox" :checked="useGps" @change="toggleGps" />
-            <label for="gps" class="form-check-label small text-muted">Enviar minha localização na marcação</label>
-        </div>
+        <p v-if="me?.require_location" class="text-center small text-muted mb-4">
+            <i class="bi bi-geo-alt-fill text-primary"></i> Sua empresa exige a localização para registrar o ponto.
+        </p>
+        <div v-else class="mb-4"></div>
 
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white fw-semibold">Marcações de hoje</div>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\TimeAdjustment;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -27,6 +28,13 @@ class HandleInertiaRequests extends Middleware
                 ] : null,
                 'company' => $user?->company ? ['id' => $user->company->id, 'name' => $user->company->displayName(), 'plan' => $user->company->plan] : null,
             ],
+            // Badge do menu "Ajustes": solicitações aguardando decisão.
+            'pending_adjustments' => fn () => $user?->company_id && $user->hasRole('owner', 'rh', 'gestor')
+                ? TimeAdjustment::forCompany($user->company_id)
+                    ->where('status', 'pendente')
+                    ->when($user->hasRole('gestor'), fn ($q) => $q->whereHas('employee.team', fn ($t) => $t->where('manager_user_id', $user->id)))
+                    ->count()
+                : 0,
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

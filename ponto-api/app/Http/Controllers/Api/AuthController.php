@@ -66,6 +66,7 @@ class AuthController extends Controller
                 'start' => substr($employee->workSchedule->start_time, 0, 5),
                 'end' => substr($employee->workSchedule->end_time, 0, 5),
             ],
+            'require_location' => (bool) $employee->company->require_location,
             'server_time' => now()->toIso8601String(),
             'next_type' => $service->nextType($employee),
             'next_type_label' => TimeEntry::TYPES[$service->nextType($employee)],

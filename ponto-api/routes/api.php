@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AdjustmentController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PunchController;
 use Illuminate\Support\Facades\Route;
@@ -13,4 +14,6 @@ Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
     Route::post('/ponto', [PunchController::class, 'store'])->middleware('throttle:ponto');
     Route::post('/historico', [PunchController::class, 'history']);
     Route::post('/comprovante/{entry}', [PunchController::class, 'receipt']);
+    Route::post('/ajustes', [AdjustmentController::class, 'store'])->middleware('throttle:20,1');
+    Route::post('/espelho/pdf', [AdjustmentController::class, 'pdf']);
 });

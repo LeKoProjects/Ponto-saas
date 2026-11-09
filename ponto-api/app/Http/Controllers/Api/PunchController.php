@@ -14,15 +14,26 @@ class PunchController extends Controller
 {
     public function __construct(private TimeEntryService $service) {}
 
-    /** Bater ponto. A hora vem do servidor; o cliente só envia GPS opcional. */
+    /**
+     * Bater ponto. A hora vem do servidor.
+     * Localização: o RH define na empresa. Ativa → obrigatória; inativa → não é coletada.
+     */
     public function store(Request $request): JsonResponse
     {
+        $employee = $request->user()->employee;
+        $requireLocation = (bool) $employee->company->require_location;
+
         $data = $request->validate([
-            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
-            'longitude' => ['nullable', 'numeric', 'between:-180,180', 'required_with:latitude'],
+            'latitude' => [$requireLocation ? 'required' : 'nullable', 'numeric', 'between:-90,90'],
+            'longitude' => [$requireLocation ? 'required' : 'nullable', 'numeric', 'between:-180,180'],
+        ], [
+            'latitude.required' => 'Sua empresa exige a localização para registrar o ponto. Ative o GPS e permita o acesso à localização.',
+            'longitude.required' => 'Sua empresa exige a localização para registrar o ponto. Ative o GPS e permita o acesso à localização.',
         ]);
 
-        $employee = $request->user()->employee;
+        if (! $requireLocation) {
+            $data = []; // LGPD: não guardar localização que a empresa não exige.
+        }
 
         $entry = $this->service->register($employee, [
             ...$data,

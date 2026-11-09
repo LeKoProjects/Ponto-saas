@@ -24,7 +24,7 @@ ponto-saas/
 | Banco | PostgreSQL 16 — multiempresa em banco único (`company_id` + global scope) |
 | Fila/cache | Redis + Horizon (e-mail do comprovante) |
 | Painel | Inertia + Vue 3 + Bootstrap 5, paginação de 20, modal de loading em toda requisição, ações via POST |
-| PWA | Vue 3 + vite-plugin-pwa, botão único, GPS opcional |
+| PWA | Vue 3 + vite-plugin-pwa, botão único, espelho em calendário, solicitação de ajustes, GPS conforme configuração da empresa |
 | PDF | barryvdh/laravel-dompdf |
 | Testes | Pest |
 
@@ -94,7 +94,8 @@ Cobrem os critérios de pronto do plano:
 | Requisito | Como |
 | --- | --- |
 | Marcação imutável | Trigger `ponto_prevent_modification` bloqueia UPDATE/DELETE em `time_entries` e `audit_logs`; o model também recusa. Em produção, crie o papel `app_user` e rode as migrations: o `REVOKE` é aplicado automaticamente. |
-| Correções | Só como **tratamento** (`time_adjustments`: inclusão/desconsideração), com justificativa e auditoria. O espelho mostra o original riscado. |
+| Correções | Só como **tratamento** (`time_adjustments`: inclusão, exclusão/desconsideração e alteração), com justificativa e auditoria. O colaborador solicita pela PWA (fica **pendente**); RH, dono ou o gestor da equipe aprova ou rejeita (com motivo) no painel. Lançamentos do RH já entram aprovados. O espelho mostra o original riscado. |
+| Localização | Parâmetro da empresa em **Configurações** (dono/RH). Ativo: a batida só é aceita com latitude/longitude. Inativo: o app não pede e o servidor descarta coordenadas (LGPD). |
 | NSR por empregador | `companies.next_nsr` com `SELECT … FOR UPDATE` dentro da transação. |
 | Hash encadeado | `sha256(prev_hash \| employee_id \| nsr \| marked_at)`; comando `php artisan ponto:verificar-cadeia` roda todo dia às 02:00. |
 | Hora | Sempre `now()` do servidor (`America/Bahia`); o horário enviado pelo cliente é ignorado. Na VPS, configure `chrony` com `a.ntp.br`. |
@@ -109,9 +110,11 @@ Todos via `POST`, autenticados com `Authorization: Bearer <token>`.
 | --- | --- |
 | `/api/login` | `email`, `password` → `token` |
 | `/api/me` | dados do funcionário, marcações de hoje, próximo tipo, hora do servidor |
-| `/api/ponto` | registra marcação (`latitude`/`longitude` opcionais), retorna comprovante — limite de 4/min |
+| `/api/ponto` | registra marcação, retorna comprovante — limite de 4/min. `latitude`/`longitude` obrigatórios se a empresa exigir localização |
 | `/api/comprovante/{id}` | comprovante de uma marcação própria |
-| `/api/historico` | espelho do mês (`month=YYYY-MM`) |
+| `/api/historico` | espelho do mês (`month=YYYY-MM`) com batidas e solicitações de cada dia |
+| `/api/ajustes` | solicita ajuste: `type` (`inclusao`, `desconsideracao`, `alteracao`), `date`/`time`/`time_entry_id` conforme o tipo, `reason` |
+| `/api/espelho/pdf` | PDF do espelho do mês (`month=YYYY-MM`) |
 | `/api/logout` | revoga o token |
 
 ## Roadmap
@@ -121,8 +124,10 @@ Todos via `POST`, autenticados com `Authorization: Bearer <token>`.
 - [x] Sprint 3 — Marcação: PWA, NSR, hash, comprovante, GPS opcional
 - [x] Sprint 4 — Painel "agora" e cálculo diário
 - [x] Sprint 5 — Espelho PDF/CSV, auditoria, tratamentos
+- [x] Espelho em calendário na PWA + solicitação de ajuste pelo colaborador com aprovação no painel
+- [x] Localização obrigatória configurável pelo RH
 - [ ] Sprint 6 — Deploy na VPS, backup testado (restore real), monitoramento, termos e privacidade
-- [ ] Fase 2 — Solicitação de ajuste pelo funcionário + aprovação do gestor, banco de horas, WhatsApp, cobrança recorrente, AFD/AEJ assinados, INPI e atestado técnico
+- [ ] Fase 2 — Anexo de atestado na solicitação, banco de horas, WhatsApp, cobrança recorrente, AFD/AEJ assinados, INPI e atestado técnico
 
 ## Limitações conhecidas do MVP
 
