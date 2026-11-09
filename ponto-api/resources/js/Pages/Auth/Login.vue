@@ -34,7 +34,7 @@ const submit = () => form.post('/login', { onFinish: () => form.reset('password'
                     <button class="btn btn-primary w-100" :disabled="form.processing">Entrar</button>
                 </form>
             </div>
-            <div class="card-footer bg-white text-center small">
+            <div class="card-footer bg-body text-center small">
                 <a href="/privacidade" target="_blank" class="text-muted">Política de privacidade</a>
             </div>
         </div>

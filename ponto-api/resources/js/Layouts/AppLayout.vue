@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
+import ThemeSwitch from '../Components/ThemeSwitch.vue';
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
@@ -53,6 +54,7 @@ const logout = () => router.post('/logout');
             <div class="border-top border-secondary pt-3 mt-3">
                 <div class="small">{{ user?.name }}</div>
                 <div class="small text-white-50 mb-2">{{ user?.role_label }}</div>
+                <ThemeSwitch dark class="mb-2" />
                 <button class="btn btn-sm btn-outline-light w-100" @click="logout"><i class="bi bi-box-arrow-right"></i> Sair</button>
             </div>
         </aside>

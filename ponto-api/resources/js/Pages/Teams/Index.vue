@@ -28,7 +28,7 @@ const submit = () => {
     <div class="row g-4">
         <div class="col-xl-4">
             <form class="card border-0 shadow-sm" @submit.prevent="submit">
-                <div class="card-header bg-white fw-semibold">{{ editingId ? 'Editar equipe' : 'Nova equipe' }}</div>
+                <div class="card-header bg-body fw-semibold">{{ editingId ? 'Editar equipe' : 'Nova equipe' }}</div>
                 <div class="card-body">
                     <label class="form-label">Nome</label>
                     <input v-model="form.name" class="form-control mb-3" :class="{ 'is-invalid': form.errors.name }" required />
@@ -38,7 +38,7 @@ const submit = () => {
                         <option v-for="m in managers" :key="m.id" :value="m.id">{{ m.name }}</option>
                     </select>
                 </div>
-                <div class="card-footer bg-white d-flex gap-2 justify-content-end">
+                <div class="card-footer bg-body d-flex gap-2 justify-content-end">
                     <button v-if="editingId" type="button" class="btn btn-outline-secondary" @click="cancel">Cancelar</button>
                     <button class="btn btn-primary" :disabled="form.processing">Salvar</button>
                 </div>

@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title inertia>{{ config('app.name') }}</title>
+    <meta name="color-scheme" content="light dark">
+    <!-- Tema (claro/escuro/sistema) aplicado antes de desenhar: evita piscar branco. -->
+    <script>(function(){try{var p=localStorage.getItem("ponto_theme")||"system";var d=p==="dark"||(p!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.setAttribute("data-bs-theme",d?"dark":"light")}catch(e){}})();</script>
     @vite('resources/js/app.js')
     @inertiaHead
 </head>

@@ -33,7 +33,7 @@ const pending = computed(() => [!props.inpi && 'número de registro no INPI (PON
         <div class="col-lg-7 col-xxl-8">
             <form class="card border-0 shadow-sm" method="post" action="/arquivos-fiscais/afd" @submit.prevent="submit">
                 <input type="hidden" name="_token" :value="page.props.csrf_token" />
-                <div class="card-header bg-white fw-semibold"><i class="bi bi-file-earmark-text"></i> AFD — Arquivo Fonte de Dados</div>
+                <div class="card-header bg-body fw-semibold"><i class="bi bi-file-earmark-text"></i> AFD — Arquivo Fonte de Dados</div>
                 <div class="card-body">
                     <p class="small text-muted">
                         Todas as marcações do período, com NSR, CPF, data/hora e hash encadeado, no leiaute oficial (versão 003).
@@ -82,7 +82,7 @@ const pending = computed(() => [!props.inpi && 'número de registro no INPI (PON
             </form>
 
             <div class="card border-0 shadow-sm mt-3">
-                <div class="card-header bg-white fw-semibold"><i class="bi bi-hourglass-split"></i> Próximos arquivos</div>
+                <div class="card-header bg-body fw-semibold"><i class="bi bi-hourglass-split"></i> Próximos arquivos</div>
                 <ul class="list-group list-group-flush small">
                     <li class="list-group-item"><b>AEJ</b> (Arquivo Eletrônico de Jornada): jornada contratual, marcações tratadas, ausências e banco de horas, para o eSocial/fiscalização.</li>
                     <li class="list-group-item"><b>Comprovante assinado em PDF</b> (PAdES) a cada marcação.</li>
@@ -93,7 +93,7 @@ const pending = computed(() => [!props.inpi && 'número de registro no INPI (PON
 
         <div class="col-lg-5 col-xxl-4">
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white fw-semibold"><i class="bi bi-patch-check"></i> Assinatura digital</div>
+                <div class="card-header bg-body fw-semibold"><i class="bi bi-patch-check"></i> Assinatura digital</div>
                 <div class="card-body small">
                     <template v-if="certificate_installed">
                         <template v-if="certificate">

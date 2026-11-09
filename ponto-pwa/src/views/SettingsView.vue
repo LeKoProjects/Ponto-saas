@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue';
 import { post, webUrl } from '../api';
 import { describeDevice } from '../device';
 import { prefs, session } from '../session';
+import { THEMES, setTheme, themeApplied, themePref } from '../theme';
 
 defineEmits(['logout']);
 
@@ -156,9 +157,38 @@ onMounted(async () => {
             </ul>
         </div>
 
-        <!-- Privacidade -->
         </section>
         <section>
+        <!-- Aparência -->
+        <div class="section-title">Aparência</div>
+        <div class="card border-0 shadow-sm mb-3 enter-up">
+            <div class="card-body">
+                <div class="theme-options" role="radiogroup" aria-label="Tema do aplicativo">
+                    <button
+                        v-for="t in THEMES"
+                        :key="t.key"
+                        type="button"
+                        class="theme-option"
+                        :class="{ active: themePref === t.key }"
+                        role="radio"
+                        :aria-checked="themePref === t.key"
+                        @click="setTheme(t.key)"
+                    >
+                        <span class="theme-preview" :class="`preview-${t.key}`"><i :class="`bi ${t.icon}`"></i></span>
+                        <span class="small fw-semibold">{{ t.label }}</span>
+                    </button>
+                </div>
+                <div class="small text-muted mt-2">
+                    <template v-if="themePref === 'system'">
+                        Segue o tema do seu aparelho (agora: {{ themeApplied === 'dark' ? 'escuro' : 'claro' }}) e muda sozinho quando ele mudar.
+                    </template>
+                    <template v-else>Tema {{ themePref === 'dark' ? 'escuro' : 'claro' }} sempre, independente do aparelho.</template>
+                </div>
+            </div>
+        </div>
+        </section>
+        <section>
+        <!-- Privacidade -->
         <div class="section-title">Privacidade</div>
         <div class="card border-0 shadow-sm mb-3 enter-up">
             <a :href="privacyUrl" target="_blank" rel="noopener" class="list-group-item list-group-item-action d-flex align-items-center gap-3 p-3 border-0 rounded">
@@ -186,7 +216,7 @@ onMounted(async () => {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: #6c757d;
+    color: var(--bs-secondary-color);
     margin: 0 4px 6px;
 }
 .avatar {
@@ -218,5 +248,53 @@ onMounted(async () => {
     transition:
         background-position var(--base) var(--ease),
         background-color var(--base) var(--ease);
+}
+.theme-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+.theme-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 6px;
+    border: 2px solid var(--bs-border-color);
+    border-radius: 14px;
+    background: none;
+    color: var(--bs-body-color);
+    transition:
+        border-color var(--base) var(--ease),
+        transform var(--fast) var(--ease);
+}
+.theme-option:active {
+    transform: scale(0.97);
+}
+.theme-option.active {
+    border-color: var(--bs-primary);
+    color: var(--bs-primary);
+}
+.theme-preview {
+    width: 100%;
+    height: 44px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    border: 1px solid var(--bs-border-color);
+}
+.preview-light {
+    background: #f4f6fb;
+    color: #f59f00;
+}
+.preview-dark {
+    background: #121417;
+    color: #9ec5fe;
+}
+.preview-system {
+    background: linear-gradient(135deg, #f4f6fb 50%, #121417 50%);
+    color: var(--bs-primary);
 }
 </style>

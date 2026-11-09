@@ -91,7 +91,7 @@ const submit = () => {
                 </div>
             </div>
         </div>
-        <div class="card-footer bg-white d-flex gap-2 justify-content-end">
+        <div class="card-footer bg-body d-flex gap-2 justify-content-end">
             <Link href="/funcionarios" class="btn btn-outline-secondary">Cancelar</Link>
             <button class="btn btn-primary" :disabled="form.processing">Salvar</button>
         </div>
@@ -99,7 +99,7 @@ const submit = () => {
 
     <!-- Histórico de aparelhos -->
     <div v-if="employee" class="card border-0 shadow-sm mt-4">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <div class="card-header bg-body d-flex justify-content-between align-items-center">
             <span class="fw-semibold"><i class="bi bi-phone"></i> Aparelhos do colaborador</span>
             <Link href="/aparelhos" class="small">Gerenciar aparelhos</Link>
         </div>

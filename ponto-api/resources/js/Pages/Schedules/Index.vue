@@ -36,7 +36,7 @@ const days = (list) => list.map((d) => props.weekdays[d]).join(', ');
     <div class="row g-4">
         <div class="col-xl-4">
             <form class="card border-0 shadow-sm" @submit.prevent="submit">
-                <div class="card-header bg-white fw-semibold">{{ editingId ? 'Editar jornada' : 'Nova jornada' }}</div>
+                <div class="card-header bg-body fw-semibold">{{ editingId ? 'Editar jornada' : 'Nova jornada' }}</div>
                 <div class="card-body row g-2">
                     <div class="col-12">
                         <label class="form-label">Nome</label>
@@ -75,7 +75,7 @@ const days = (list) => list.map((d) => props.weekdays[d]).join(', ');
                         <div class="invalid-feedback">{{ form.errors.tolerance_minutes }}</div>
                     </div>
                 </div>
-                <div class="card-footer bg-white d-flex gap-2 justify-content-end">
+                <div class="card-footer bg-body d-flex gap-2 justify-content-end">
                     <button v-if="editingId" type="button" class="btn btn-outline-secondary" @click="cancel">Cancelar</button>
                     <button class="btn btn-primary" :disabled="form.processing">Salvar</button>
                 </div>

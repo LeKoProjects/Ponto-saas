@@ -328,7 +328,7 @@ onMounted(load);
 }
 .cal-head div {
     font-weight: 600;
-    color: #6c757d;
+    color: var(--bs-secondary-color);
     padding: 6px 0;
 }
 .calendar {
@@ -344,7 +344,7 @@ onMounted(load);
     padding: 8px 0 2px;
     margin: 2px;
     font-size: 1.05rem;
-    color: #343a40;
+    color: var(--bs-emphasis-color);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -358,10 +358,10 @@ onMounted(load);
     transform: scale(0.9);
 }
 .cal-day.off {
-    color: #8a929a;
+    color: var(--bs-secondary-color);
 }
 .cal-day.outside {
-    color: #ced4da;
+    color: var(--bs-tertiary-color);
 }
 .cal-day.today {
     font-weight: 700;
@@ -395,7 +395,7 @@ onMounted(load);
 }
 .divider-date {
     text-align: center;
-    border-top: 1px solid #dee2e6;
+    border-top: 1px solid var(--bs-border-color);
     margin: 8px 0 16px;
     line-height: 0;
 }
@@ -406,7 +406,7 @@ onMounted(load);
     flex-direction: column;
     align-items: center;
     gap: 4px;
-    color: #343a40;
+    color: var(--bs-emphasis-color);
     transition: opacity var(--base) var(--ease);
 }
 .action-btn:disabled {
@@ -416,7 +416,7 @@ onMounted(load);
     width: 64px;
     height: 64px;
     border-radius: 50%;
-    background: #e9ecef;
+    background: var(--bs-secondary-bg);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -427,7 +427,7 @@ onMounted(load);
         color var(--base) var(--ease);
 }
 .action-btn:not(:disabled):hover .action-icon {
-    background: #dbe7ff;
+    background: rgba(var(--bs-primary-rgb), 0.18);
     color: var(--bs-primary);
 }
 .action-btn:not(:disabled):active .action-icon {

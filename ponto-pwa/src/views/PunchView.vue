@@ -168,7 +168,7 @@ onUnmounted(() => {
         </div>
 
         <div class="card border-0 shadow-sm punch-today">
-            <div class="card-header bg-white fw-semibold d-flex justify-content-between">
+            <div class="card-header bg-body fw-semibold d-flex justify-content-between">
                 Marcações de hoje
                 <span v-if="!synced" class="spinner-border spinner-border-sm text-secondary" title="Atualizando"></span>
             </div>

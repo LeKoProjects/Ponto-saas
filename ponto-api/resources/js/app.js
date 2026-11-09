@@ -5,6 +5,7 @@ import { Modal } from 'bootstrap';
 import { createApp, h } from 'vue';
 import { createInertiaApp, router } from '@inertiajs/vue3';
 import AppLayout from './Layouts/AppLayout.vue';
+import './theme';
 
 createInertiaApp({
     title: (title) => (title ? `${title} · Ponto SaaS` : 'Ponto SaaS'),
