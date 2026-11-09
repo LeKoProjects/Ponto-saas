@@ -20,7 +20,7 @@ class Company extends Model
 
     protected $casts = ['require_location' => 'boolean'];
 
-    protected $hidden = ['next_nsr'];
+    protected $hidden = ['next_nsr', 'last_hash'];
 
     public function users(): HasMany
     {

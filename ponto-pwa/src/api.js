@@ -1,4 +1,6 @@
 // Cliente da API (Sanctum token). Convenção do projeto: todas as chamadas via POST.
+import { session } from './session';
+
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 const TOKEN_KEY = 'ponto_token';
 
@@ -11,6 +13,7 @@ export const auth = {
     },
     clear() {
         localStorage.removeItem(TOKEN_KEY);
+        session.clear(); // outro colaborador pode usar o mesmo aparelho
     },
 };
 

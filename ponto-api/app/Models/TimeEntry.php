@@ -25,7 +25,7 @@ class TimeEntry extends Model
         'extra' => 'Marcação extra',
     ];
 
-    protected $fillable = ['company_id', 'employee_id', 'nsr', 'marked_at', 'type', 'latitude', 'longitude', 'ip', 'device', 'prev_hash', 'hash'];
+    protected $fillable = ['company_id', 'employee_id', 'nsr', 'marked_at', 'type', 'latitude', 'longitude', 'ip', 'device', 'request_id', 'prev_hash', 'hash'];
 
     protected function casts(): array
     {

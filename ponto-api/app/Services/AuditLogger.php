@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 /** Registra toda ação administrativa (RH, gestor, admin SaaS). */
 class AuditLogger
 {
-    private const HIDDEN = ['password', 'remember_token', 'next_nsr'];
+    private const HIDDEN = ['password', 'remember_token', 'next_nsr', 'last_hash'];
 
     public function log(string $action, ?Model $entity = null, ?array $before = null, ?array $after = null, ?int $companyId = null): AuditLog
     {
