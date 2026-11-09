@@ -1,0 +1,78 @@
+name: ponto-saas
+
+x-app: &app
+  build:
+    context: ./ponto-api
+    dockerfile: ../docker/php/Dockerfile
+  env_file: ./ponto-api/.env
+  environment:
+    DB_HOST: postgres
+    DB_PORT: 5432
+    REDIS_HOST: redis
+  volumes:
+    - ./ponto-api:/var/www/html
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_started
+
+services:
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./ponto-api:/var/www/html:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - php
+
+  php:
+    <<: *app
+
+  worker:
+    <<: *app
+    command: php artisan horizon
+
+  scheduler:
+    <<: *app
+    command: php artisan schedule:work
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ponto
+      POSTGRES_USER: ponto
+      POSTGRES_PASSWORD: ponto
+      TZ: America/Bahia
+    ports:
+      - "${DB_HOST_PORT:-5433}:5432"   # 5433 no host para não conflitar com Postgres local
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ponto -d ponto"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  pwa:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    environment:
+      VITE_API_URL: http://localhost:8080/api
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./ponto-pwa:/app
+    profiles: ["pwa"]
+
+volumes:
+  pgdata:
