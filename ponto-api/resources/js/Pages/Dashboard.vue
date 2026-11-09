@@ -1,6 +1,7 @@
 <script setup>
 import { Head, router } from '@inertiajs/vue3';
 import { onMounted, onUnmounted, ref } from 'vue';
+import { fmtMinutes } from '../utils';
 
 const props = defineProps({ data: Object, teams: Array, filters: Object });
 const teamId = ref(props.filters.team_id ?? '');
@@ -66,7 +67,7 @@ onUnmounted(() => clearInterval(interval));
                         <td><span :class="`badge text-bg-${statusInfo[r.status].cls}`">{{ statusInfo[r.status].label }}</span></td>
                         <td>{{ r.expected_start }}</td>
                         <td><span v-for="(m, i) in r.marks" :key="i" class="me-2">{{ m }}</span></td>
-                        <td><span v-if="r.late_minutes" class="text-danger">{{ r.late_minutes }} min</span></td>
+                        <td><span v-if="r.late_minutes" class="text-danger">{{ fmtMinutes(r.late_minutes) }}</span></td>
                     </tr>
                     <tr v-if="!data.rows.length"><td colspan="6" class="text-center text-muted py-4">Nenhum funcionário ativo.</td></tr>
                 </tbody>

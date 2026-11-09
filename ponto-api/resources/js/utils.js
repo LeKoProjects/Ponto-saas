@@ -7,6 +7,12 @@ export const fmtMinutes = (m) => {
 
 export const fmtMinutesZero = (m) => fmtMinutes(m) || '00:00';
 
+/** "08:30" → 510 (para campos de duração em horas). */
+export const parseHHMM = (v) => {
+    const [h, m] = String(v || '0:0').split(':').map(Number);
+    return (h || 0) * 60 + (m || 0);
+};
+
 export const maskCpf = (v) =>
     String(v || '')
         .replace(/\D/g, '')

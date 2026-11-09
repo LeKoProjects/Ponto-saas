@@ -38,8 +38,9 @@ const removeLogo = () => {
     <Head title="Configurações" />
     <h1 class="h3 mb-3">Configurações da empresa</h1>
 
-    <div class="d-flex flex-column gap-3" style="max-width: 720px">
+    <div class="row g-3 align-items-start">
         <!-- Logo -->
+        <div class="col-xl-5">
         <form class="card border-0 shadow-sm" @submit.prevent="uploadLogo">
             <div class="card-header bg-white fw-semibold"><i class="bi bi-image"></i> Logo da empresa</div>
             <div class="card-body d-flex flex-wrap gap-3 align-items-center">
@@ -58,7 +59,9 @@ const removeLogo = () => {
                 <button class="btn btn-primary" :disabled="!logoForm.logo || logoForm.processing"><i class="bi bi-upload"></i> Enviar logo</button>
             </div>
         </form>
+        </div>
 
+        <div class="col-xl-7">
         <form class="card border-0 shadow-sm" @submit.prevent="submit">
             <div class="card-header bg-white fw-semibold"><i class="bi bi-geo-alt"></i> Localização na batida de ponto</div>
             <div class="card-body">
@@ -92,5 +95,6 @@ const removeLogo = () => {
                 <button class="btn btn-primary" :disabled="form.processing || !form.isDirty">Salvar</button>
             </div>
         </form>
+        </div>
     </div>
 </template>

@@ -1,8 +1,8 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import Pagination from '../../Components/Pagination.vue';
-import { fmtMinutesZero } from '../../utils';
+import { fmtMinutesZero, parseHHMM } from '../../utils';
 
 const props = defineProps({ schedules: Object, weekdays: Object });
 
@@ -21,6 +21,10 @@ const cancel = () => {
 };
 const submit = () =>
     form.post(editingId.value ? `/jornadas/${editingId.value}` : '/jornadas', { preserveScroll: true, onSuccess: cancel });
+
+// Jornada e intervalo são digitados em horas (HH:MM); o servidor continua recebendo minutos.
+const dailyHours = computed({ get: () => fmtMinutesZero(form.daily_minutes), set: (v) => (form.daily_minutes = parseHHMM(v)) });
+const breakHours = computed({ get: () => fmtMinutesZero(form.break_minutes), set: (v) => (form.break_minutes = parseHHMM(v)) });
 
 const days = (list) => list.map((d) => props.weekdays[d]).join(', ');
 </script>
@@ -47,12 +51,14 @@ const days = (list) => list.map((d) => props.weekdays[d]).join(', ');
                         <input v-model="form.end_time" type="time" class="form-control" required />
                     </div>
                     <div class="col-6">
-                        <label class="form-label">Jornada diária (min)</label>
-                        <input v-model.number="form.daily_minutes" type="number" min="1" class="form-control" required />
+                        <label class="form-label">Jornada diária (horas)</label>
+                        <input v-model.lazy="dailyHours" type="time" min="00:01" class="form-control" :class="{ 'is-invalid': form.errors.daily_minutes }" required />
+                        <div class="invalid-feedback">{{ form.errors.daily_minutes }}</div>
                     </div>
                     <div class="col-6">
-                        <label class="form-label">Intervalo (min)</label>
-                        <input v-model.number="form.break_minutes" type="number" min="0" class="form-control" required />
+                        <label class="form-label">Intervalo (horas)</label>
+                        <input v-model.lazy="breakHours" type="time" class="form-control" :class="{ 'is-invalid': form.errors.break_minutes }" required />
+                        <div class="invalid-feedback">{{ form.errors.break_minutes }}</div>
                     </div>
                     <div class="col-12">
                         <label class="form-label">Dias de trabalho</label>
@@ -64,7 +70,7 @@ const days = (list) => list.map((d) => props.weekdays[d]).join(', ');
                         <div v-if="form.errors.weekdays" class="text-danger small">{{ form.errors.weekdays }}</div>
                     </div>
                     <div class="col-12">
-                        <label class="form-label">Tolerância diária (min)</label>
+                        <label class="form-label">Tolerância diária (minutos, máx. 10 pela CLT)</label>
                         <input v-model.number="form.tolerance_minutes" type="number" min="0" max="10" class="form-control" :class="{ 'is-invalid': form.errors.tolerance_minutes }" />
                         <div class="invalid-feedback">{{ form.errors.tolerance_minutes }}</div>
                     </div>
@@ -80,18 +86,19 @@ const days = (list) => list.map((d) => props.weekdays[d]).join(', ');
             <div class="card border-0 shadow-sm">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
-                        <thead class="table-light"><tr><th>Nome</th><th>Horário</th><th>Diária</th><th>Dias</th><th>Tolerância</th><th>Func.</th><th></th></tr></thead>
+                        <thead class="table-light"><tr><th>Nome</th><th>Horário</th><th>Diária</th><th>Intervalo</th><th>Dias</th><th>Tolerância</th><th>Func.</th><th></th></tr></thead>
                         <tbody>
                             <tr v-for="s in schedules.data" :key="s.id">
                                 <td>{{ s.name }}</td>
                                 <td>{{ s.start_time.slice(0, 5) }}–{{ s.end_time.slice(0, 5) }}</td>
                                 <td>{{ fmtMinutesZero(s.daily_minutes) }}</td>
+                                <td>{{ fmtMinutesZero(s.break_minutes) }}</td>
                                 <td class="small">{{ days(s.weekdays) }}</td>
-                                <td>{{ s.tolerance_minutes }} min</td>
+                                <td>{{ fmtMinutesZero(s.tolerance_minutes) }}</td>
                                 <td>{{ s.employees_count }}</td>
                                 <td class="text-end"><button class="btn btn-sm btn-outline-primary" @click="edit(s)"><i class="bi bi-pencil"></i></button></td>
                             </tr>
-                            <tr v-if="!schedules.data.length"><td colspan="7" class="text-center text-muted py-4">Nenhuma jornada cadastrada.</td></tr>
+                            <tr v-if="!schedules.data.length"><td colspan="8" class="text-center text-muted py-4">Nenhuma jornada cadastrada.</td></tr>
                         </tbody>
                     </table>
                 </div>

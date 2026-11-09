@@ -29,8 +29,8 @@ const pending = computed(() => [!props.inpi && 'número de registro no INPI (PON
     <h1 class="h3 mb-1">Arquivos fiscais</h1>
     <p class="text-muted mb-3">Arquivos oficiais da Portaria MTP nº 671/2021 para entregar à fiscalização do trabalho ou à Justiça.</p>
 
-    <div class="row g-3" style="max-width: 1100px">
-        <div class="col-lg-7">
+    <div class="row g-3">
+        <div class="col-lg-7 col-xxl-8">
             <form class="card border-0 shadow-sm" method="post" action="/arquivos-fiscais/afd" @submit.prevent="submit">
                 <input type="hidden" name="_token" :value="page.props.csrf_token" />
                 <div class="card-header bg-white fw-semibold"><i class="bi bi-file-earmark-text"></i> AFD — Arquivo Fonte de Dados</div>
@@ -91,7 +91,7 @@ const pending = computed(() => [!props.inpi && 'número de registro no INPI (PON
             </div>
         </div>
 
-        <div class="col-lg-5">
+        <div class="col-lg-5 col-xxl-4">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white fw-semibold"><i class="bi bi-patch-check"></i> Assinatura digital</div>
                 <div class="card-body small">

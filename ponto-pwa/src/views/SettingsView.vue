@@ -64,7 +64,9 @@ onMounted(async () => {
 <template>
     <div class="pt-3">
         <h1 class="h5 fw-semibold mb-3">Configurações</h1>
+        <div class="settings-grid">
 
+        <section class="settings-account">
         <!-- Conta -->
         <div class="card border-0 shadow-sm mb-3 enter-up">
             <div class="card-body d-flex align-items-center gap-3">
@@ -78,6 +80,8 @@ onMounted(async () => {
         </div>
 
         <!-- Aparelho -->
+        </section>
+        <section>
         <div class="section-title">Aparelho</div>
         <div class="card border-0 shadow-sm mb-3 enter-up">
             <ul class="list-group list-group-flush">
@@ -106,6 +110,8 @@ onMounted(async () => {
         </div>
 
         <!-- Sincronização -->
+        </section>
+        <section>
         <div class="section-title">Sincronização</div>
         <div class="card border-0 shadow-sm mb-3 enter-up">
             <div class="card-body">
@@ -126,6 +132,8 @@ onMounted(async () => {
         </div>
 
         <!-- Segurança -->
+        </section>
+        <section>
         <div class="section-title">Segurança</div>
         <div class="card border-0 shadow-sm mb-3 enter-up">
             <ul class="list-group list-group-flush">
@@ -149,6 +157,8 @@ onMounted(async () => {
         </div>
 
         <!-- Privacidade -->
+        </section>
+        <section>
         <div class="section-title">Privacidade</div>
         <div class="card border-0 shadow-sm mb-3 enter-up">
             <a :href="privacyUrl" target="_blank" rel="noopener" class="list-group-item list-group-item-action d-flex align-items-center gap-3 p-3 border-0 rounded">
@@ -161,7 +171,10 @@ onMounted(async () => {
             </a>
         </div>
 
-        <button class="btn btn-outline-danger w-100 mb-3" @click="$emit('logout')">
+        </section>
+        </div>
+
+        <button class="btn btn-outline-danger w-100 mb-3 settings-logout" @click="$emit('logout')">
             <i class="bi bi-box-arrow-right"></i> Sair da conta
         </button>
     </div>
