@@ -134,6 +134,8 @@ onUnmounted(() => {
             <button class="btn btn-sm btn-outline-secondary" aria-label="Sair" @click="$emit('logout')"><i class="bi bi-box-arrow-right"></i></button>
         </div>
 
+        <div class="punch-grid">
+        <div class="punch-main">
         <div class="text-center mb-4">
             <div class="clock">{{ clock }}</div>
             <div class="text-muted text-capitalize">{{ todayLabel }}</div>
@@ -163,8 +165,9 @@ onUnmounted(() => {
             <i class="bi bi-geo-alt-fill text-primary"></i> Sua empresa exige a localização para registrar o ponto.
         </p>
         <div v-else class="mb-4"></div>
+        </div>
 
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow-sm punch-today">
             <div class="card-header bg-white fw-semibold d-flex justify-content-between">
                 Marcações de hoje
                 <span v-if="!synced" class="spinner-border spinner-border-sm text-secondary" title="Atualizando"></span>
@@ -176,6 +179,7 @@ onUnmounted(() => {
                 </li>
                 <li v-if="!entries.length" key="empty" class="list-group-item text-muted text-center">Nenhuma marcação hoje.</li>
             </TransitionGroup>
+        </div>
         </div>
 
         <!-- Comprovante (folha inferior) -->

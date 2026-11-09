@@ -84,6 +84,7 @@ onMounted(() => {
                     <SettingsView v-else key="config" @logout="logout" />
                 </Transition>
                 <nav class="tabbar d-flex">
+                    <div class="tabbar-brand"><img src="/favicon.svg" width="32" height="32" alt="" /> Ponto</div>
                     <span class="tab-indicator" :style="{ width: `${100 / TABS.length}%`, transform: `translateX(${tabIndex(tab) * 100}%)` }"></span>
                     <button v-for="t in TABS" :key="t.key" :class="{ active: tab === t.key }" :aria-current="tab === t.key ? 'page' : null" @click="go(t.key)">
                         <i :class="`bi ${t.icon}`"></i>{{ t.label }}

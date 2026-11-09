@@ -13,6 +13,20 @@
     min-height: 100vh;
 }
 
+@media (min-width: 992px) {
+    /* Largura fixa: não encolhe quando a tela tem tabela larga, e acompanha a rolagem. */
+    .sidebar {
+        flex: 0 0 240px;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+    }
+    main {
+        min-width: 0; /* deixa tabelas largas rolarem dentro do conteúdo, sem empurrar o menu */
+    }
+}
+
 .sidebar .nav-link {
     position: relative;
     color: rgba(255, 255, 255, 0.75);

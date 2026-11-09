@@ -327,3 +327,156 @@ body {
     border: 1px solid var(--bs-border-color);
     padding: 3px;
 }
+
+/* ======================================================================
+   Computador (≥ 992px): usa a largura da tela.
+   Celular continua igual: coluna única e abas embaixo.
+   ====================================================================== */
+.tabbar-brand {
+    display: none;
+}
+
+@media (min-width: 992px) {
+    /* Abas viram menu lateral fixo à esquerda */
+    .tabbar {
+        top: 0;
+        right: auto;
+        width: 220px;
+        max-width: none;
+        margin: 0;
+        flex-direction: column;
+        gap: 4px;
+        padding: 20px 12px;
+        border-top: 0;
+        border-right: 1px solid #e3e6ee;
+        background: #fff;
+    }
+    .tabbar-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        font-size: 1.15rem;
+        padding: 0 10px 20px;
+    }
+    .tab-indicator {
+        display: none;
+    }
+    .tabbar button {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        text-align: left;
+        transition:
+            color var(--base) var(--ease),
+            background-color var(--base) var(--ease);
+    }
+    .tabbar button:hover {
+        background: #f1f4fa;
+    }
+    .tabbar button.active {
+        background: rgba(var(--bs-primary-rgb), 0.1);
+        font-weight: 600;
+    }
+    .tabbar i {
+        display: inline-block;
+        font-size: 1.2rem;
+    }
+    .tabbar button.active i {
+        transform: none;
+    }
+
+    /* Área de conteúdo ocupa o resto da tela */
+    .app {
+        max-width: none;
+        padding: 24px 40px 40px;
+    }
+    .app:has(.tabbar) {
+        margin-left: 220px;
+    }
+    /* Logado: telas até 1280px de largura */
+    .app:has(.tabbar) > div > :not(.tabbar) {
+        max-width: 1280px;
+    }
+    /* Login e espera de liberação continuam como cartão central */
+    .app:not(:has(.tabbar)) > * {
+        max-width: 440px;
+        margin-inline: auto;
+    }
+
+    /* Ponto: relógio e botão | marcações de hoje */
+    .punch-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+        gap: 32px;
+        align-items: start;
+    }
+    .punch-main {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        padding: 40px 24px 16px;
+    }
+
+    /* Espelho: calendário | dia selecionado */
+    .history-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+        gap: 32px;
+        align-items: start;
+    }
+    .history-cal .calendar {
+        display: block !important; /* no computador o calendário fica sempre aberto */
+    }
+    .history-cal,
+    .history-day {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        padding: 20px;
+    }
+    .history-day .divider-date {
+        border-top: 0 !important;
+        line-height: normal !important;
+        margin: 0 0 16px !important;
+    }
+
+    /* Configurações: seções em grade */
+    .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0 24px;
+        align-items: start;
+    }
+    .settings-account {
+        grid-column: 1 / -1;
+    }
+    .settings-logout {
+        width: auto !important;
+        padding-inline: 2rem;
+    }
+
+    /* Folhas (comprovante, solicitação) viram janela centralizada */
+    .sheet-backdrop {
+        align-items: center !important;
+        justify-content: center;
+    }
+    .sheet {
+        max-width: 520px;
+        border-radius: 20px;
+    }
+    .sheet-handle {
+        display: none;
+    }
+}
+
+/* Telas largas: Configurações em 3 colunas */
+@media (min-width: 1400px) {
+    .settings-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}

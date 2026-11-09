@@ -159,6 +159,8 @@ onMounted(load);
             <div v-if="notice" class="alert alert-success py-2"><i class="bi bi-check-circle-fill"></i> {{ notice }}</div>
         </Transition>
 
+        <div class="history-grid">
+        <div class="history-cal">
         <!-- Calendário -->
         <Transition name="collapse">
         <div v-show="showCalendar" class="calendar mb-1" :class="{ loading }">
@@ -193,12 +195,15 @@ onMounted(load);
             </div>
         </div>
         </Transition>
-        <div class="text-center">
+        <div class="text-center d-lg-none">
             <button class="btn btn-link text-secondary" :aria-label="showCalendar ? 'Recolher calendário' : 'Mostrar calendário'" @click="showCalendar = !showCalendar">
                 <i class="bi bi-chevron-up chevron" :class="{ flipped: !showCalendar }"></i>
             </button>
         </div>
 
+        </div>
+
+        <div class="history-day">
         <!-- Dia selecionado -->
         <div class="divider-date">
             <Transition name="fade" mode="out-in">
@@ -265,6 +270,8 @@ onMounted(load);
         </template>
         </div>
         </Transition>
+        </div>
+        </div>
 
         <!-- Formulário (bottom sheet) -->
         <Teleport to="body">
