@@ -48,15 +48,11 @@ class TimesheetController extends Controller
     {
         [$year, $month] = $this->period($request);
         $employee = $this->employeesFor($request)->findOrFail($request->integer('employee_id'));
-        $report = $this->reports->forEmployee($employee, $year, $month);
 
         $this->audit->log('timesheet.pdf', $employee, null, ['month' => sprintf('%04d-%02d', $year, $month)]);
 
-        return Pdf::loadView('pdf.timesheet', [
-            'r' => $report,
-            'company' => $request->user()->company,
-            'fmt' => fn (int $m) => TimeCalculationService::formatMinutes($m),
-        ])->setPaper('a4')->download(sprintf('espelho-%s-%04d-%02d.pdf', $employee->id, $year, $month));
+        return $this->reports->pdf($employee, $year, $month)
+            ->download(sprintf('espelho-%s-%04d-%02d.pdf', $employee->id, $year, $month));
     }
 
     /** CSV para o contador: uma linha por funcionário/dia, separador ";" (Excel pt-BR). */

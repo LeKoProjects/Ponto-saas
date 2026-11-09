@@ -22,6 +22,26 @@ export class ApiError extends Error {
     }
 }
 
+/** Baixa um arquivo (ex.: PDF do espelho) autenticado e dispara o download. */
+export async function download(path, body, filename) {
+    const res = await fetch(`${BASE}${path}`, {
+        method: 'POST',
+        headers: { Accept: 'application/pdf', 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
+        body: JSON.stringify(body),
+    }).catch(() => null);
+
+    if (!res || !res.ok) {
+        throw new ApiError('Não foi possível baixar o espelho.', res?.status ?? 0);
+    }
+
+    const url = URL.createObjectURL(await res.blob());
+    const a = Object.assign(document.createElement('a'), { href: url, download: filename });
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 export async function post(path, body = {}) {
     let res;
     try {

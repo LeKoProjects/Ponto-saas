@@ -35,7 +35,7 @@
                 <td class="left">{{ $d['label'] }}</td>
                 <td class="left">
                     @foreach ($d['marks'] as $m)
-                        <span class="{{ $m['discarded'] ? 'strike' : ($m['source'] === 'inclusao' ? 'inc' : '') }}">{{ $m['time'] }}</span>
+                        <span class="{{ $m['discarded'] ? 'strike' : ($m['source'] !== 'original' ? 'inc' : '') }}">{{ $m['time'] }}</span>
                     @endforeach
                 </td>
                 <td>{{ $fmt($d['expected_minutes']) }}</td>

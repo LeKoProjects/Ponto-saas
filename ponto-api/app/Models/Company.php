@@ -16,7 +16,9 @@ class Company extends Model
         'empresa' => ['label' => 'Empresa', 'price' => 199, 'max_employees' => 80],
     ];
 
-    protected $fillable = ['cnpj', 'legal_name', 'trade_name', 'plan', 'status', 'timezone'];
+    protected $fillable = ['cnpj', 'legal_name', 'trade_name', 'plan', 'status', 'timezone', 'require_location'];
+
+    protected $casts = ['require_location' => 'boolean'];
 
     protected $hidden = ['next_nsr'];
 
