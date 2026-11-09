@@ -34,7 +34,18 @@ export const session = {
     clear() {
         localStorage.removeItem(PROFILE_KEY);
         localStorage.removeItem(TODAY_KEY);
+        prefs.set('last_sync', null);
     },
+};
+
+/**
+ * Preferências do aparelho (biometria, última sincronização).
+ * Ficam mesmo após sair da conta: são do aparelho, não do colaborador.
+ */
+const PREFS_KEY = 'ponto_prefs';
+export const prefs = {
+    get: (key) => (read(PREFS_KEY) ?? {})[key] ?? null,
+    set: (key, value) => write(PREFS_KEY, { ...(read(PREFS_KEY) ?? {}), [key]: value }),
 };
 
 /** UUID v4 do toque (idempotência no servidor). */
