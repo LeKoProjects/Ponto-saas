@@ -42,7 +42,7 @@ const removeLogo = () => {
         <!-- Logo -->
         <div class="col-xl-5">
         <form class="card border-0 shadow-sm" @submit.prevent="uploadLogo">
-            <div class="card-header bg-white fw-semibold"><i class="bi bi-image"></i> Logo da empresa</div>
+            <div class="card-header bg-body fw-semibold"><i class="bi bi-image"></i> Logo da empresa</div>
             <div class="card-body d-flex flex-wrap gap-3 align-items-center">
                 <img v-if="preview || settings.logo_url" :src="preview || settings.logo_url" alt="Logo" class="logo-preview" />
                 <div v-else class="logo-preview d-flex align-items-center justify-content-center text-muted small">Sem logo</div>
@@ -52,7 +52,7 @@ const removeLogo = () => {
                     <div class="form-text">PNG, JPG ou WEBP, até 1 MB. Prefira fundo transparente. Aparece no painel, no app do colaborador, no espelho em PDF e no e-mail do comprovante.</div>
                 </div>
             </div>
-            <div class="card-footer bg-white d-flex justify-content-between">
+            <div class="card-footer bg-body d-flex justify-content-between">
                 <button v-if="settings.logo_url && !preview" type="button" class="btn btn-outline-danger" @click="removeLogo"><i class="bi bi-trash"></i> Remover</button>
                 <button v-else-if="preview" type="button" class="btn btn-outline-secondary" @click="resetPick">Cancelar</button>
                 <span v-else></span>
@@ -63,7 +63,7 @@ const removeLogo = () => {
 
         <div class="col-xl-7">
         <form class="card border-0 shadow-sm" @submit.prevent="submit">
-            <div class="card-header bg-white fw-semibold"><i class="bi bi-geo-alt"></i> Localização na batida de ponto</div>
+            <div class="card-header bg-body fw-semibold"><i class="bi bi-geo-alt"></i> Localização na batida de ponto</div>
             <div class="card-body">
                 <div class="form-check form-switch fs-5 mb-2">
                     <input id="loc" v-model="form.require_location" class="form-check-input" type="checkbox" role="switch" />
@@ -84,14 +84,14 @@ const removeLogo = () => {
                 </p>
             </div>
 
-            <div class="card-header bg-white fw-semibold border-top"><i class="bi bi-shield-check"></i> Privacidade (LGPD)</div>
+            <div class="card-header bg-body fw-semibold border-top"><i class="bi bi-shield-check"></i> Privacidade (LGPD)</div>
             <div class="card-body">
                 <label class="form-label">E-mail do encarregado de dados (DPO) da empresa</label>
                 <input v-model="form.privacy_email" type="email" class="form-control" :class="{ 'is-invalid': form.errors.privacy_email }" placeholder="privacidade@suaempresa.com.br" />
                 <div class="invalid-feedback">{{ form.errors.privacy_email }}</div>
                 <div class="form-text">Aparece na <a href="/privacidade" target="_blank">política de privacidade</a> do app para o colaborador exercer seus direitos (acesso, correção etc.).</div>
             </div>
-            <div class="card-footer bg-white text-end">
+            <div class="card-footer bg-body text-end">
                 <button class="btn btn-primary" :disabled="form.processing || !form.isDirty">Salvar</button>
             </div>
         </form>

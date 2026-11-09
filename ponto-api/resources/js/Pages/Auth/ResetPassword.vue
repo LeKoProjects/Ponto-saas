@@ -32,7 +32,7 @@ const submit = () => form.post('/redefinir-senha', { onFinish: () => form.reset(
                     <button class="btn btn-primary w-100" :disabled="form.processing">Salvar nova senha</button>
                 </form>
             </div>
-            <div class="card-footer bg-white text-center small">
+            <div class="card-footer bg-body text-center small">
                 <Link href="/login">Voltar para o login</Link>
             </div>
         </div>

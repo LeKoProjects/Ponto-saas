@@ -41,7 +41,7 @@ const toggle = (c) =>
     <div class="row g-4">
         <div class="col-xl-4">
             <form class="card border-0 shadow-sm" @submit.prevent="submit">
-                <div class="card-header bg-white fw-semibold">{{ editingId ? 'Editar empresa' : 'Nova empresa' }}</div>
+                <div class="card-header bg-body fw-semibold">{{ editingId ? 'Editar empresa' : 'Nova empresa' }}</div>
                 <div class="card-body row g-2">
                     <div class="col-12">
                         <label class="form-label">CNPJ</label>
@@ -79,7 +79,7 @@ const toggle = (c) =>
                         <div class="col-12"><input v-model="form.owner_password" type="password" class="form-control" placeholder="Senha inicial (mín. 8)" required autocomplete="new-password" /></div>
                     </template>
                 </div>
-                <div class="card-footer bg-white d-flex gap-2 justify-content-end">
+                <div class="card-footer bg-body d-flex gap-2 justify-content-end">
                     <button v-if="editingId" type="button" class="btn btn-outline-secondary" @click="cancel">Cancelar</button>
                     <button class="btn btn-primary" :disabled="form.processing">Salvar</button>
                 </div>

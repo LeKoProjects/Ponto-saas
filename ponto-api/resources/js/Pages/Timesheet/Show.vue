@@ -64,7 +64,7 @@ const dayEntries = computed(() => props.entries.filter((e) => !adj.date || e.dat
         </div>
 
         <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white">
+            <div class="card-header bg-body">
                 <b>{{ report.employee.name }}</b> · CPF {{ report.employee.cpf }} · {{ report.employee.schedule }} · faltas: {{ report.totals.absences }}
             </div>
             <div class="table-responsive">

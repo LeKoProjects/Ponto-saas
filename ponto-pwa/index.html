@@ -7,6 +7,9 @@
     <meta name="theme-color" content="#0d6efd" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
     <title>Ponto</title>
+    <meta name="color-scheme" content="light dark" />
+    <!-- Tema (claro/escuro/sistema) aplicado antes de desenhar: evita piscar branco. -->
+    <script>(function(){try{var p=localStorage.getItem("ponto_theme")||"system";var d=p==="dark"||(p!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.setAttribute("data-bs-theme",d?"dark":"light")}catch(e){}})();</script>
   </head>
   <body>
     <div id="app"></div>

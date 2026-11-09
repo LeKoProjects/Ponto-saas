@@ -31,7 +31,7 @@ const submit = () => form.post('/esqueci-senha', { preserveScroll: true });
                     <button class="btn btn-primary w-100" :disabled="form.processing">Enviar link</button>
                 </form>
             </div>
-            <div class="card-footer bg-white text-center small">
+            <div class="card-footer bg-body text-center small">
                 <Link href="/login">Voltar para o login</Link>
             </div>
         </div>
