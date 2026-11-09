@@ -5,10 +5,26 @@ namespace App\Services;
 use App\Models\AuditLog;
 use Illuminate\Database\Eloquent\Model;
 
-/** Registra toda ação administrativa (RH, gestor, admin SaaS). */
+/** Registra toda ação administrativa (RH, gestor, admin SaaS) e as do colaborador que precisam de rastro. */
 class AuditLogger
 {
     private const HIDDEN = ['password', 'remember_token', 'next_nsr', 'last_hash'];
+
+    /** Autor explícito para ações sem usuário autenticado (ex.: login do app). */
+    private ?int $actorId = null;
+
+    /** Executa o callback registrando $userId como autor. */
+    public function as(?int $userId, callable $callback): mixed
+    {
+        $previous = $this->actorId;
+        $this->actorId = $userId;
+
+        try {
+            return $callback();
+        } finally {
+            $this->actorId = $previous;
+        }
+    }
 
     public function log(string $action, ?Model $entity = null, ?array $before = null, ?array $after = null, ?int $companyId = null): AuditLog
     {
@@ -16,7 +32,7 @@ class AuditLogger
 
         return AuditLog::create([
             'company_id' => $companyId ?? $entity?->getAttribute('company_id') ?? $user?->company_id,
-            'user_id' => $user?->id,
+            'user_id' => $this->actorId ?? $user?->id,
             'action' => $action,
             'entity_type' => $entity ? class_basename($entity) : null,
             'entity_id' => $entity?->getKey(),

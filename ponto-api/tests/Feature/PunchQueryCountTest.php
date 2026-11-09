@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 beforeEach(function () {
     Mail::fake();
     $this->c = makeCompany('Teta');
-    $this->token = $this->c['employee']->user->createToken('pwa')->plainTextToken;
+    $this->token = apiToken($this->c['employee']->user);
 });
 
 it('registra a batida com no máximo 6 consultas ao banco (contexto em cache)', function () {

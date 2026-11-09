@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureDeviceApproved;
 use App\Http\Middleware\EnsureRole;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SetTenant;
@@ -21,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'tenant' => SetTenant::class,
             'role' => EnsureRole::class,
+            'device' => EnsureDeviceApproved::class,
         ]);
 
         // O tenant precisa estar definido ANTES do route model binding,

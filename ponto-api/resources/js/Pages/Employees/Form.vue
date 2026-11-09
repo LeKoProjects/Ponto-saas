@@ -1,8 +1,9 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import DeviceStatus from '../../Components/DeviceStatus.vue';
 import { maskCpf } from '../../utils';
 
-const props = defineProps({ employee: { type: Object, default: null }, schedules: Array, teams: Array });
+const props = defineProps({ employee: { type: Object, default: null }, schedules: Array, teams: Array, devices: { type: Array, default: () => [] } });
 
 const form = useForm({
     name: props.employee?.name ?? '',
@@ -95,4 +96,30 @@ const submit = () => {
             <button class="btn btn-primary" :disabled="form.processing">Salvar</button>
         </div>
     </form>
+
+    <!-- Histórico de aparelhos -->
+    <div v-if="employee" class="card border-0 shadow-sm mt-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <span class="fw-semibold"><i class="bi bi-phone"></i> Aparelhos do colaborador</span>
+            <Link href="/aparelhos" class="small">Gerenciar aparelhos</Link>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm mb-0 align-middle">
+                <thead class="table-light">
+                    <tr><th>Aparelho</th><th>Solicitado em</th><th>Situação</th><th>Liberado / recusado</th><th>Desconectado</th><th>Último acesso</th></tr>
+                </thead>
+                <tbody>
+                    <tr v-for="d in devices" :key="d.id">
+                        <td>{{ d.name }}</td>
+                        <td class="small text-nowrap">{{ d.requested_at }}</td>
+                        <td><DeviceStatus :status="d.status" :label="d.status_label" /></td>
+                        <td class="small">{{ d.decided ?? '—' }}</td>
+                        <td class="small">{{ d.revoked ?? '—' }}<div v-if="d.reason" class="text-muted fst-italic">{{ d.reason }}</div></td>
+                        <td class="small text-nowrap">{{ d.last_seen_at ?? '—' }}</td>
+                    </tr>
+                    <tr v-if="!devices.length"><td colspan="6" class="text-center text-muted py-3">Nenhum aparelho. O colaborador ainda não entrou no app.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </template>

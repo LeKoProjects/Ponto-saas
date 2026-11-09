@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Company;
+use App\Models\Device;
 use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
@@ -73,6 +74,21 @@ class ContextCache
 
             return $company ? ['id' => $company->id, 'status' => $company->status] : null;
         });
+    }
+
+    /** Status do aparelho do token (checado a cada requisição do app). */
+    public static function device(int $deviceId): ?array
+    {
+        return Cache::remember("ponto:ctx:device:{$deviceId}", self::TTL_SECONDS, function () use ($deviceId) {
+            $device = Device::withoutGlobalScope('company')->find($deviceId);
+
+            return $device ? $device->only(['id', 'employee_id', 'status']) + ['api' => $device->toApiArray()] : null;
+        });
+    }
+
+    public static function forgetDevice(int $deviceId): void
+    {
+        Cache::forget("ponto:ctx:device:{$deviceId}");
     }
 
     public static function forgetUser(int $userId): void

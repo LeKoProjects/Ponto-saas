@@ -8,6 +8,7 @@ defineEmits(['logout']);
 
 const profile = ref(session.profile());
 const device = ref(null);
+const binding = ref(session.device()); // liberação do RH para este aparelho
 
 // ---- Sincronização ----
 const syncing = ref(false);
@@ -30,6 +31,10 @@ const sync = async () => {
         const me = await post('/me');
         session.saveProfile(me.profile);
         session.saveToday(me.today, me.next_type, me.next_type_label);
+        if (me.device) {
+            session.saveDevice(me.device);
+            binding.value = me.device;
+        }
         profile.value = me.profile;
         lastSync.value = new Date().toISOString();
         prefs.set('last_sync', lastSync.value);
@@ -84,6 +89,16 @@ onMounted(async () => {
                             <span v-else class="placeholder-glow"><span class="placeholder col-8"></span></span>
                         </div>
                         <div v-if="device" class="small text-muted">{{ device.browser }} · {{ device.standalone ? 'App instalado' : 'No navegador' }}</div>
+                    </div>
+                </li>
+                <li v-if="binding" class="list-group-item d-flex align-items-center gap-3">
+                    <i class="bi fs-4" :class="binding.status === 'aprovado' ? 'bi-shield-check text-success' : 'bi-hourglass-split text-warning'"></i>
+                    <div class="min-w-0 flex-grow-1">
+                        <div class="fw-semibold">{{ binding.status === 'aprovado' ? 'Aparelho liberado pelo RH' : binding.status_label }}</div>
+                        <div class="small text-muted">
+                            <template v-if="binding.status === 'aprovado' && binding.decided_at">Desde {{ binding.decided_at }} · </template>
+                            Este é o único aparelho em que você pode bater o ponto.
+                        </div>
                     </div>
                 </li>
             </ul>

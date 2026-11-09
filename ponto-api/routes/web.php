@@ -5,6 +5,7 @@ use App\Http\Controllers\Web\Admin\CompanyController;
 use App\Http\Controllers\Web\AuditLogController;
 use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\DeviceController;
 use App\Http\Controllers\Web\EmployeeController;
 use App\Http\Controllers\Web\SettingsController;
 use App\Http\Controllers\Web\TeamController;
@@ -58,6 +59,11 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::post('/equipes/{team}', [TeamController::class, 'update'])->name('teams.update');
 
         Route::post('/ajustes', [AdjustmentController::class, 'store'])->name('adjustments.store');
+
+        Route::get('/aparelhos', [DeviceController::class, 'index'])->name('devices.index');
+        Route::post('/aparelhos/{device}/liberar', [DeviceController::class, 'approve'])->name('devices.approve');
+        Route::post('/aparelhos/{device}/recusar', [DeviceController::class, 'reject'])->name('devices.reject');
+        Route::post('/aparelhos/{device}/desconectar', [DeviceController::class, 'revoke'])->name('devices.revoke');
 
         Route::get('/auditoria', [AuditLogController::class, 'index'])->name('audit.index');
 

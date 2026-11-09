@@ -63,9 +63,24 @@ export async function post(path, body = {}) {
 
     const data = await res.json().catch(() => ({}));
 
-    if (res.status === 401) {
+    if (res.status === 401 && auth.token) {
+        // Token apagado no servidor: outro aparelho foi liberado, ou o RH desconectou/recusou este.
         auth.clear();
-        window.dispatchEvent(new Event('ponto:logout'));
+        window.dispatchEvent(
+            new CustomEvent('ponto:logout', {
+                detail: 'Este aparelho foi desconectado. Isso acontece quando o RH libera outro aparelho para você ou desconecta este. Entre novamente para pedir a liberação.',
+            }),
+        );
+    }
+
+    // Aparelho ainda não liberado pelo RH (ou token antigo, sem aparelho).
+    if (res.status === 403 && data.code?.startsWith('device_')) {
+        if (data.code === 'device_required') {
+            auth.clear();
+            window.dispatchEvent(new CustomEvent('ponto:logout', { detail: data.message }));
+        } else {
+            window.dispatchEvent(new CustomEvent('ponto:device', { detail: data.device }));
+        }
     }
     if (res.status === 429) {
         throw new ApiError('Muitas tentativas. Aguarde um minuto.', 429);

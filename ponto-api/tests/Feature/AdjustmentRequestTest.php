@@ -24,7 +24,7 @@ beforeEach(function () {
     }
     Carbon::setTestNow('2026-11-10 09:00:00');
 
-    $this->actingAs($this->employee->user, 'sanctum');
+    $this->withToken(apiToken($this->employee->user));
 });
 
 afterEach(fn () => Carbon::setTestNow());
@@ -94,8 +94,7 @@ it('não deixa solicitar ajuste em batida de outro colaborador ou de outra empre
     $other = makeCompany('Zeta');
     $foreign = app(TimeEntryService::class)->register($other['employee']);
 
-    $this->actingAs($this->employee->user, 'sanctum')
-        ->postJson('/api/ajustes', ['type' => 'desconsideracao', 'time_entry_id' => $foreign->id, 'reason' => 'Tentativa'])
+    $this->postJson('/api/ajustes', ['type' => 'desconsideracao', 'time_entry_id' => $foreign->id, 'reason' => 'Tentativa'])
         ->assertJsonValidationErrors('time_entry_id');
 });
 

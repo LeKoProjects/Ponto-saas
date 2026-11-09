@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\EmployeeRequest;
+use App\Models\Device;
 use App\Models\Employee;
 use App\Models\Team;
 use App\Models\User;
@@ -90,10 +91,22 @@ class EmployeeController extends Controller
 
     public function edit(Employee $employee): Response
     {
-        $employee->load('user');
+        $employee->load('user', 'devices.decider:id,name', 'devices.revoker:id,name');
 
         return Inertia::render('Employees/Form', [
             ...$this->formOptions(),
+            // Histórico de aparelhos do colaborador (nunca é apagado).
+            'devices' => $employee->devices->sortByDesc('requested_at')->values()->map(fn (Device $d) => [
+                'id' => $d->id,
+                'name' => $d->name,
+                'status' => $d->status,
+                'status_label' => Device::STATUSES[$d->status],
+                'requested_at' => $d->requested_at?->format('d/m/Y H:i'),
+                'decided' => $d->decided_at ? $d->decided_at->format('d/m/Y H:i').($d->decider ? " por {$d->decider->name}" : '') : null,
+                'revoked' => $d->revoked_at ? $d->revoked_at->format('d/m/Y H:i').($d->revoker ? " por {$d->revoker->name}" : '') : null,
+                'reason' => $d->revoke_reason,
+                'last_seen_at' => $d->last_seen_at?->format('d/m/Y H:i'),
+            ]),
             'employee' => [
                 'id' => $employee->id,
                 'name' => $employee->user->name,

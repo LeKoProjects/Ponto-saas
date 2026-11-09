@@ -1,7 +1,10 @@
 <script setup>
 import { ref } from 'vue';
 import { auth, post } from '../api';
+import { describeDevice } from '../device';
+import { deviceId, session } from '../session';
 
+const props = defineProps({ notice: { type: String, default: '' } });
 const emit = defineEmits(['logged-in']);
 const email = ref('');
 const password = ref('');
@@ -12,9 +15,16 @@ const submit = async () => {
     loading.value = true;
     error.value = '';
     try {
-        const { token } = await post('/login', { email: email.value, password: password.value, device_name: navigator.userAgent.slice(0, 100) });
+        const info = await describeDevice();
+        const { token, device } = await post('/login', {
+            email: email.value,
+            password: password.value,
+            device_id: deviceId(),
+            device_name: `${info.name} · ${info.browser}`,
+        });
         auth.set(token);
-        emit('logged-in');
+        session.saveDevice(device);
+        emit('logged-in', device);
     } catch (e) {
         error.value = e.message;
     } finally {
@@ -30,9 +40,16 @@ const submit = async () => {
             <h1 class="h3 fw-bold">Registro de ponto</h1>
             <p class="text-muted">Entre com o e-mail cadastrado pelo RH</p>
         </div>
+        <Transition name="alert">
+            <div v-if="props.notice && !error" class="alert alert-warning small d-flex gap-2">
+                <i class="bi bi-info-circle-fill"></i><span>{{ props.notice }}</span>
+            </div>
+        </Transition>
         <form class="card border-0 shadow-sm" @submit.prevent="submit">
             <div class="card-body p-4">
-                <div v-if="error" class="alert alert-danger py-2">{{ error }}</div>
+                <Transition name="alert">
+                    <div v-if="error" class="alert alert-danger py-2">{{ error }}</div>
+                </Transition>
                 <div class="mb-3">
                     <label class="form-label">E-mail</label>
                     <input v-model="email" type="email" class="form-control form-control-lg" autocomplete="username" required />
@@ -46,5 +63,8 @@ const submit = async () => {
                 </button>
             </div>
         </form>
+        <p class="small text-muted text-center mt-3">
+            <i class="bi bi-phone"></i> No primeiro acesso, este aparelho precisa ser liberado pelo RH.
+        </p>
     </div>
 </template>

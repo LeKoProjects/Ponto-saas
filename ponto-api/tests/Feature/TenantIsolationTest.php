@@ -44,7 +44,7 @@ it('aplica o escopo global de empresa nas consultas Eloquent', function () {
 it('não expõe comprovante de outro funcionário pela API', function () {
     $entryB = app(TimeEntryService::class)->register($this->b['employee']);
 
-    $this->actingAs($this->a['employee']->user, 'sanctum')
+    $this->withToken(apiToken($this->a['employee']->user))
         ->postJson('/api/comprovante/'.$entryB->id)
         ->assertNotFound();
 });

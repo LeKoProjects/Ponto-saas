@@ -1,12 +1,21 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { auth, post } from './api';
+import { session } from './session';
 import LoginView from './views/LoginView.vue';
+import DeviceGateView from './views/DeviceGateView.vue';
 import PunchView from './views/PunchView.vue';
 import HistoryView from './views/HistoryView.vue';
 import SettingsView from './views/SettingsView.vue';
 
 const loggedIn = ref(!!auth.token);
+const device = ref(session.device()); // vínculo deste aparelho com o colaborador
+const loginNotice = ref('');
+
+// Logado, mas o RH ainda não liberou este aparelho → tela de espera.
+const waitingDevice = computed(() => loggedIn.value && device.value && device.value.status !== 'aprovado');
+const screen = computed(() => (!loggedIn.value ? 'login' : waitingDevice.value ? 'gate' : 'app'));
+
 const tab = ref('ponto');
 const TABS = [
     { key: 'ponto', label: 'Ponto', icon: 'bi-fingerprint' },
@@ -23,6 +32,18 @@ const go = (next) => {
     window.scrollTo({ top: 0, behavior: 'instant' });
 };
 
+const onLoggedIn = (d) => {
+    loginNotice.value = '';
+    device.value = d;
+    tab.value = 'ponto';
+    loggedIn.value = true;
+};
+
+const onApproved = (d) => {
+    device.value = d;
+    tab.value = 'ponto';
+};
+
 const logout = async () => {
     try {
         await post('/logout');
@@ -30,16 +51,32 @@ const logout = async () => {
         /* token já inválido */
     }
     auth.clear();
+    device.value = null;
     loggedIn.value = false;
 };
 
-onMounted(() => window.addEventListener('ponto:logout', () => (loggedIn.value = false)));
+onMounted(() => {
+    // 401 (aparelho desconectado) ou token antigo sem aparelho.
+    window.addEventListener('ponto:logout', (e) => {
+        loginNotice.value = e.detail ?? '';
+        device.value = null;
+        loggedIn.value = false;
+    });
+    // 403 de aparelho não liberado: mostra a tela de espera.
+    window.addEventListener('ponto:device', (e) => {
+        if (e.detail) {
+            device.value = e.detail;
+            session.saveDevice(e.detail);
+        }
+    });
+});
 </script>
 
 <template>
     <div class="app">
         <Transition name="fade" mode="out-in">
-            <LoginView v-if="!loggedIn" key="login" @logged-in="loggedIn = true" />
+            <LoginView v-if="screen === 'login'" key="login" :notice="loginNotice" @logged-in="onLoggedIn" />
+            <DeviceGateView v-else-if="screen === 'gate'" key="gate" :device="device" @approved="onApproved" @logout="logout" />
             <div v-else key="app">
                 <Transition :name="`tab-${direction}`" mode="out-in">
                     <PunchView v-if="tab === 'ponto'" key="ponto" @logout="logout" />
