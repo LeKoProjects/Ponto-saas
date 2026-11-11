@@ -6,6 +6,7 @@ use App\Models\Company;
 use App\Models\Device;
 use App\Models\Employee;
 use App\Models\User;
+use App\Models\WorkLocation;
 use App\Models\WorkSchedule;
 use App\Support\ContextCache;
 use App\Support\Tenant;
@@ -63,5 +64,8 @@ class AppServiceProvider extends ServiceProvider
         Company::saved(fn (Company $c) => ContextCache::forgetCompany($c->id));
         WorkSchedule::saved(fn (WorkSchedule $s) => ContextCache::forgetSchedule($s->id));
         Device::saved(fn (Device $d) => ContextCache::forgetDevice($d->id));
+        $location = fn (WorkLocation $l) => ContextCache::forgetCompany($l->company_id);
+        WorkLocation::saved($location);
+        WorkLocation::deleted($location);
     }
 }

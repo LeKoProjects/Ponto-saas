@@ -17,9 +17,9 @@ class Company extends Model
         'empresa' => ['label' => 'Empresa', 'price' => 199, 'max_employees' => 80],
     ];
 
-    protected $fillable = ['cnpj', 'legal_name', 'trade_name', 'plan', 'status', 'timezone', 'require_location', 'logo_path', 'privacy_email'];
+    protected $fillable = ['cnpj', 'legal_name', 'trade_name', 'plan', 'status', 'timezone', 'require_location', 'logo_path', 'privacy_email', 'geofence_enabled'];
 
-    protected $casts = ['require_location' => 'boolean'];
+    protected $casts = ['require_location' => 'boolean', 'geofence_enabled' => 'boolean'];
 
     protected $hidden = ['next_nsr', 'last_hash'];
 
@@ -31,6 +31,17 @@ class Company extends Model
     public function employees(): HasMany
     {
         return $this->hasMany(Employee::class)->withoutGlobalScope('company');
+    }
+
+    public function workLocations(): HasMany
+    {
+        return $this->hasMany(WorkLocation::class)->withoutGlobalScope('company');
+    }
+
+    /** Cerca virtual em vigor: ligada e com pelo menos um local cadastrado. */
+    public function geofenceActive(): bool
+    {
+        return $this->geofence_enabled && $this->workLocations()->exists();
     }
 
     public function isActive(): bool

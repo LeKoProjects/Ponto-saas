@@ -37,6 +37,11 @@ class ContextCache
             return null;
         }
 
+        $geofence = $employee->company->geofence_enabled
+            ? $employee->company->workLocations()->orderBy('name')->get()->map->toContext()->all()
+            : [];
+        $geofence = $geofence ?: null;
+
         $ctx = [
             'employee_id' => $employee->id,
             'user_id' => $user->id,
@@ -51,7 +56,9 @@ class ContextCache
             'company_name' => $employee->company->displayName(),
             'logo_url' => $employee->company->logoUrl(),
             'privacy_email' => $employee->company->privacy_email,
-            'require_location' => (bool) $employee->company->require_location,
+            // Cerca virtual ligada também torna a localização obrigatória.
+            'require_location' => (bool) $employee->company->require_location || $geofence !== null,
+            'geofence' => $geofence,
             'schedule' => [
                 'name' => $employee->workSchedule->name,
                 'start' => substr($employee->workSchedule->start_time, 0, 5),

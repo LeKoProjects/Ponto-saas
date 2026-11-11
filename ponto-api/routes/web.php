@@ -86,5 +86,8 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::post('/configuracoes', [SettingsController::class, 'update'])->name('settings.update');
         Route::post('/configuracoes/logo', [SettingsController::class, 'uploadLogo'])->name('settings.logo');
         Route::post('/configuracoes/logo/remover', [SettingsController::class, 'removeLogo'])->name('settings.logo.remove');
+        Route::post('/configuracoes/locais', [SettingsController::class, 'storeLocation'])->name('settings.locations.store');
+        Route::post('/configuracoes/locais/{location}', [SettingsController::class, 'updateLocation'])->name('settings.locations.update');
+        Route::post('/configuracoes/locais/{location}/remover', [SettingsController::class, 'destroyLocation'])->name('settings.locations.destroy');
     });
 });

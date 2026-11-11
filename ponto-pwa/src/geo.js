@@ -12,7 +12,9 @@ const ERRORS = {
 let watchId = null;
 let last = null; // { latitude, longitude, at }
 
-const toCoords = (p) => ({ latitude: p.coords.latitude, longitude: p.coords.longitude, at: Date.now() });
+// accuracy (metros): o servidor usa como folga quando a empresa restringe a batida a locais.
+const toCoords = (p) => ({ latitude: p.coords.latitude, longitude: p.coords.longitude, accuracy: Math.round(p.coords.accuracy ?? 0), at: Date.now() });
+const payload = (c) => ({ latitude: c.latitude, longitude: c.longitude, accuracy: c.accuracy });
 
 export const geo = {
     supported: () => 'geolocation' in navigator,
@@ -34,7 +36,7 @@ export const geo = {
     /** Posição recente do cache ou uma leitura nova. Rejeita com mensagem amigável. */
     current() {
         if (last && Date.now() - last.at < FRESH_MS) {
-            return Promise.resolve({ latitude: last.latitude, longitude: last.longitude });
+            return Promise.resolve(payload(last));
         }
         if (!this.supported()) {
             return Promise.reject(new Error('Este aparelho não oferece localização, que é obrigatória na sua empresa.'));
@@ -43,7 +45,7 @@ export const geo = {
             navigator.geolocation.getCurrentPosition(
                 (p) => {
                     last = toCoords(p);
-                    resolve({ latitude: last.latitude, longitude: last.longitude });
+                    resolve(payload(last));
                 },
                 (err) => reject(new Error(ERRORS[err.code] ?? ERRORS[2])),
                 { enableHighAccuracy: true, timeout: 15_000, maximumAge: FRESH_MS },

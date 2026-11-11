@@ -109,6 +109,8 @@ class AuthController extends Controller
                 'logo_url' => $ctx['logo_url'] ?? null,
                 'schedule' => $ctx['schedule'],
                 'require_location' => $ctx['require_location'],
+                // Nomes e raios dos locais permitidos (sem coordenadas) para o app avisar o colaborador.
+                'geofence' => array_map(fn ($l) => ['name' => $l['name'], 'radius_m' => $l['radius_m']], $ctx['geofence'] ?? []) ?: null,
             ],
             // Campos antigos mantidos por compatibilidade com versões do app em cache.
             'user' => ['name' => $ctx['name'], 'email' => $ctx['email']],

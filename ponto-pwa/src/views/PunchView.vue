@@ -161,7 +161,11 @@ onUnmounted(() => {
             </span>
         </div>
 
-        <p v-if="profile?.require_location" class="text-center small text-muted mb-4">
+        <p v-if="profile?.geofence" class="text-center small text-muted mb-4">
+            <i class="bi bi-pin-map-fill text-primary"></i> Ponto liberado só em:
+            <b>{{ profile.geofence.map((l) => l.name).join(', ') }}</b>.
+        </p>
+        <p v-else-if="profile?.require_location" class="text-center small text-muted mb-4">
             <i class="bi bi-geo-alt-fill text-primary"></i> Sua empresa exige a localização para registrar o ponto.
         </p>
         <div v-else class="mb-4"></div>

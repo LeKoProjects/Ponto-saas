@@ -8,8 +8,10 @@ use App\Models\TimeEntry;
 use App\Services\MonthlyReportService;
 use App\Services\TimeEntryService;
 use App\Support\ContextCache;
+use App\Support\Geo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class PunchController extends Controller
 {
@@ -19,6 +21,7 @@ class PunchController extends Controller
      * Bater ponto. A hora vem do servidor.
      * Dados do colaborador/empresa vêm do cache de contexto (sem recarregar a cada toque).
      * Localização: o RH define na empresa. Ativa → obrigatória; inativa → não é coletada.
+     * Cerca virtual (opcional): só aceita a batida dentro do raio de um local cadastrado.
      * Resposta já traz tudo que a tela precisa (comprovante, marcações de hoje, próximo tipo).
      */
     public function store(Request $request): JsonResponse
@@ -32,11 +35,27 @@ class PunchController extends Controller
         $data = $request->validate([
             'latitude' => [$requireLocation ? 'required' : 'nullable', 'numeric', 'between:-90,90'],
             'longitude' => [$requireLocation ? 'required' : 'nullable', 'numeric', 'between:-180,180'],
+            'accuracy' => ['nullable', 'numeric', 'min:0'],
             'request_id' => ['nullable', 'uuid'],
         ], [
             'latitude.required' => $locationMessage,
             'longitude.required' => $locationMessage,
         ]);
+
+        // Cerca virtual: só aceita dentro do raio de um local cadastrado pelo RH.
+        if ($ctx['geofence'] ?? null) {
+            $check = Geo::nearest($ctx['geofence'], (float) $data['latitude'], (float) $data['longitude'], isset($data['accuracy']) ? (float) $data['accuracy'] : null);
+            if (! $check['inside']) {
+                throw ValidationException::withMessages([
+                    'latitude' => sprintf(
+                        'Você está fora do local permitido para bater o ponto: a %s de %s (limite de %d m). Aproxime-se do local ou fale com o RH.',
+                        Geo::human($check['distance']),
+                        $check['location']['name'],
+                        $check['location']['radius_m'],
+                    ),
+                ]);
+            }
+        }
 
         $meta = [
             'request_id' => $data['request_id'] ?? null,
