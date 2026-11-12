@@ -51,13 +51,17 @@ docker compose up -d postgres redis   # just the dependencies
 docker compose up -d mailpit          # e-mail testing at http://localhost:8025
 php artisan queue:work                # process email queue (receipts, password reset)
 
-# Full Docker setup
-docker compose up -d --build
+# Full Docker setup (panel/API on http://localhost:8000, same port as artisan serve)
+docker compose run --rm assets        # build panel assets in a fresh clone
+docker compose up -d --build          # vendor/ is installed automatically into a Docker volume
 docker compose exec php php artisan migrate --seed
 docker compose --profile pwa up -d pwa
+docker compose exec php php artisan test
 ```
 
 Postgres runs on host port **5433** (not 5432) to avoid conflicts.
+
+**Never run the test suite against the dev database.** Tests use `RefreshDatabase` (wipes the DB). `phpunit.xml` forces `DB_DATABASE=ponto_test` in both `<env>` and `<server>` (Docker env vars live in `$_SERVER`), and `tests/TestCase::createApplication()` aborts unless the database name ends in `_test`.
 
 ## Architecture
 

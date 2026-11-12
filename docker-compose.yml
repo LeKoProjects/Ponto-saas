@@ -1,17 +1,31 @@
 name: ponto-saas
 
+# Desenvolvimento com Docker.
+#   Painel + API:  http://localhost:8000   (mude com APP_PORT)
+#   App (PWA):     http://localhost:5173   (docker compose --profile pwa up -d)
+#   E-mails:       http://localhost:8025   (Mailpit)
+# Passo a passo no README ("Tudo em Docker").
+
 x-app: &app
   build:
-    context: ./ponto-api
-    dockerfile: ../docker/php/Dockerfile
+    context: ./docker/php
+    dockerfile: Dockerfile
+  image: ponto-saas-php
   env_file: ./ponto-api/.env
   environment:
+    # Dentro do Docker os serviços se acham pelo nome (não por 127.0.0.1).
     DB_HOST: postgres
     DB_PORT: 5432
     REDIS_HOST: redis
     MAIL_HOST: mailpit
+    MAIL_PORT: 1025
+    APP_URL: http://localhost:${APP_PORT:-8000}
+    PONTO_OPENSSL_BIN: openssl # o do Linux (o .env pode apontar para o do Windows)
   volumes:
     - ./ponto-api:/var/www/html
+    # vendor/ num volume do Docker: no Windows/macOS ler milhares de arquivos
+    # da pasta montada deixa cada página com vários segundos.
+    - vendor:/var/www/html/vendor
   depends_on:
     postgres:
       condition: service_healthy
@@ -22,7 +36,7 @@ services:
   nginx:
     image: nginx:1.27-alpine
     ports:
-      - "8080:80"
+      - "${APP_PORT:-8000}:80"
     volumes:
       - ./ponto-api:/var/www/html:ro
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
@@ -31,6 +45,15 @@ services:
 
   php:
     <<: *app
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      REDIS_HOST: redis
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+      APP_URL: http://localhost:${APP_PORT:-8000}
+      PONTO_OPENSSL_BIN: openssl
+      INSTALL_DEPS: "1" # instala o vendor/ na primeira subida
 
   worker:
     <<: *app
@@ -70,17 +93,34 @@ services:
       - "1025:1025"
       - "8025:8025"
 
+  # App do colaborador (Vite). node_modules próprio do Linux (o do Windows não serve no container).
   pwa:
     image: node:22-alpine
     working_dir: /app
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    command: sh -c "npm ci --no-audit --no-fund && npm run dev -- --host 0.0.0.0"
     environment:
-      VITE_API_URL: http://localhost:8080/api
+      VITE_API_URL: http://localhost:${APP_PORT:-8000}/api
+      CHOKIDAR_USEPOLLING: "true" # recarga automática com a pasta do Windows
     ports:
       - "5173:5173"
     volumes:
       - ./ponto-pwa:/app
+      - pwa_node_modules:/app/node_modules
     profiles: ["pwa"]
+
+  # Ferramenta: compila os arquivos do painel (CSS/JS) num clone novo.
+  #   docker compose run --rm assets
+  assets:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "npm ci --no-audit --no-fund && npm run build"
+    volumes:
+      - ./ponto-api:/app
+      - api_node_modules:/app/node_modules
+    profiles: ["tools"]
 
 volumes:
   pgdata:
+  vendor:
+  pwa_node_modules:
+  api_node_modules:

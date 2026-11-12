@@ -66,14 +66,35 @@ php artisan storage:link          # logo das empresas
 
 ### Tudo em Docker
 
+Pré-requisito: só o Docker Desktop. Feche o `php artisan serve` e o `npm run dev` locais antes (eles usam as mesmas portas).
+
 ```bash
-docker compose up -d --build
-docker compose exec php composer install
-docker compose exec php php artisan migrate --seed
-docker compose --profile pwa up -d pwa
+# 1ª vez (num clone novo)
+cp ponto-api/.env.example ponto-api/.env
+docker compose run --rm assets                      # compila o CSS/JS do painel
+docker compose up -d --build                        # painel, API, fila, agendador, Postgres, Redis, Mailpit
+docker compose exec php php artisan key:generate    # só se o APP_KEY estiver vazio
+docker compose exec php php artisan migrate --seed  # banco + dados de demonstração
+docker compose --profile pwa up -d pwa              # app do colaborador
+
+# Dia a dia
+docker compose up -d && docker compose --profile pwa up -d pwa
+docker compose down                                 # para tudo (o banco continua salvo)
 ```
 
-Painel em http://localhost:8080 · PWA em http://localhost:5173.
+| O quê | Endereço |
+| --- | --- |
+| Painel + API | http://localhost:8000 (outra porta: `APP_PORT=8090 docker compose up -d`) |
+| App do colaborador | http://localhost:5173 |
+| E-mails (Mailpit) | http://localhost:8025 |
+| Postgres (de fora) | `127.0.0.1:5433`, banco `ponto`, usuário e senha `ponto` |
+
+Como o Docker está configurado:
+- **O painel abre na mesma porta 8000** do `php artisan serve`; não é preciso mudar o `APP_URL`.
+- **`vendor/` fica num volume do Docker** e é instalado sozinho na primeira subida. Ler milhares de arquivos da pasta do Windows deixava cada página com uns 4 s; agora fica em ~0,15 s. Depois de mudar o `composer.json`: `docker compose exec php composer install`.
+- **Logos** (`/storage`) são servidas direto pelo nginx, sem depender do atalho `public/storage`, que criado no Windows não funciona no container.
+- **Dentro do Docker** os serviços se acham pelo nome (`postgres`, `redis`, `mailpit`): o `docker-compose.yml` sobrescreve `DB_HOST`, `REDIS_HOST`, `MAIL_HOST` e `PONTO_OPENSSL_BIN` do `.env`.
+- **Testes no container**: `docker compose exec php php artisan test`. Sempre usam o banco `ponto_test`; uma trava bloqueia os testes se o banco não terminar em `_test`.
 
 ### Usuários de demonstração (senha `password`)
 

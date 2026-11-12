@@ -10,5 +10,10 @@ ENV TZ=America/Bahia
 RUN cp /usr/share/zoneinfo/America/Bahia /etc/localtime && echo "date.timezone=America/Bahia" > /usr/local/etc/php/conf.d/tz.ini
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY php-dev.ini /usr/local/etc/php/conf.d/zz-ponto.ini
+COPY entrypoint.sh /usr/local/bin/ponto-entrypoint
+RUN sed -i 's/\r$//' /usr/local/bin/ponto-entrypoint && chmod +x /usr/local/bin/ponto-entrypoint
 
 WORKDIR /var/www/html
+ENTRYPOINT ["ponto-entrypoint"]
+CMD ["php-fpm"]
