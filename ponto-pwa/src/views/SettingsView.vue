@@ -50,11 +50,26 @@ const sync = async () => {
     }
 };
 
-// ---- Biometria (somente a preferência; a confirmação será implementada depois) ----
-const biometric = ref(prefs.get('biometric') === true);
-const toggleBiometric = () => {
-    biometric.value = !biometric.value;
-    prefs.set('biometric', biometric.value);
+// ---- Confirmação na batida: biometria OU reconhecimento facial (um exclui o outro) ----
+// Por enquanto só guardamos a preferência; a confirmação será implementada depois.
+// Valores: 'none' | 'biometric' | 'facial'. Migra a preferência antiga "biometric: true".
+const VERIFY_LABEL = { biometric: 'Biometria', facial: 'Reconhecimento facial' };
+const verify = ref(prefs.get('verify_method') ?? (prefs.get('biometric') === true ? 'biometric' : 'none'));
+const verifyNotice = ref('');
+let noticeTimer = null;
+
+const toggleVerify = (method) => {
+    const previous = verify.value;
+    verify.value = previous === method ? 'none' : method;
+    prefs.set('verify_method', verify.value);
+    prefs.set('biometric', verify.value === 'biometric'); // compatibilidade com versões anteriores
+
+    clearTimeout(noticeTimer);
+    verifyNotice.value =
+        verify.value !== 'none' && previous !== 'none' && previous !== verify.value
+            ? `${VERIFY_LABEL[previous]} desligada: só um modo de confirmação pode ficar ativo.`
+            : '';
+    if (verifyNotice.value) noticeTimer = setTimeout(() => (verifyNotice.value = ''), 4500);
 };
 
 onMounted(async () => {
@@ -143,15 +158,32 @@ onMounted(async () => {
                         <i class="bi bi-fingerprint fs-4 text-primary"></i>
                         <label for="bio" class="flex-grow-1 mb-0">
                             <div class="fw-semibold">Bater ponto com biometria</div>
-                            <div class="small text-muted">Pedir digital ou rosto antes de registrar</div>
+                            <div class="small text-muted">Pedir a digital antes de registrar</div>
                         </label>
                         <div class="form-check form-switch m-0">
-                            <input id="bio" class="form-check-input fs-4" type="checkbox" role="switch" :checked="biometric" @change="toggleBiometric" />
+                            <input id="bio" class="form-check-input fs-4" type="checkbox" role="switch" :checked="verify === 'biometric'" @change="toggleVerify('biometric')" />
                         </div>
                     </div>
-                    <div class="small mt-2 text-muted d-flex align-items-start gap-1">
+                </li>
+                <li class="list-group-item">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="bi bi-person-bounding-box fs-4 text-primary"></i>
+                        <label for="face" class="flex-grow-1 mb-0">
+                            <div class="fw-semibold">Bater ponto com reconhecimento facial</div>
+                            <div class="small text-muted">Confirmar pelo rosto antes de registrar</div>
+                        </label>
+                        <div class="form-check form-switch m-0">
+                            <input id="face" class="form-check-input fs-4" type="checkbox" role="switch" :checked="verify === 'facial'" @change="toggleVerify('facial')" />
+                        </div>
+                    </div>
+                </li>
+                <li class="list-group-item small text-muted">
+                    <Transition name="alert">
+                        <div v-if="verifyNotice" class="text-primary mb-2"><i class="bi bi-info-circle"></i> {{ verifyNotice }}</div>
+                    </Transition>
+                    <div class="d-flex align-items-start gap-1">
                         <span class="badge text-bg-warning">Em breve</span>
-                        <span>A confirmação por biometria ainda não está ativa: por enquanto só guardamos sua preferência.</span>
+                        <span>Escolha só um modo: ligar a biometria desliga o reconhecimento facial, e vice-versa. A confirmação ainda não está ativa: por enquanto só guardamos sua preferência.</span>
                     </div>
                 </li>
             </ul>
