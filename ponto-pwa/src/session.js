@@ -23,12 +23,15 @@ const write = (key, value) => {
 const todayStr = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Bahia' });
 
 /** UUID v4 (identidade do aparelho e idempotência de cada toque). */
-export const uuid = () =>
-    globalThis.crypto?.randomUUID?.() ??
-    'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-        const r = (Math.random() * 16) | 0;
-        return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
-    });
+// randomUUID só existe em HTTPS/localhost; aberto pela rede (http://IP) usa getRandomValues, que sempre existe.
+export const uuid = () => {
+    if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+    const b = globalThis.crypto.getRandomValues(new Uint8Array(16));
+    b[6] = (b[6] & 0x0f) | 0x40; // versão 4
+    b[8] = (b[8] & 0x3f) | 0x80; // variante RFC 4122
+    const h = [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
+    return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+};
 
 /**
  * Identificador deste aparelho, gerado uma vez e mantido mesmo após sair da conta.

@@ -57,7 +57,16 @@ class Company extends Model
     /** URL pública da logo (painel, app e e-mail). */
     public function logoUrl(): ?string
     {
-        return $this->logo_path ? Storage::disk('public')->url($this->logo_path) : null;
+        return self::logoUrlFor($this->logo_path);
+    }
+
+    /**
+     * Monta a URL pelo endereço de quem acessa (ex.: celular na rede em http://10.1.40.5:8000),
+     * não pelo APP_URL fixo. Fora de uma requisição (fila de e-mail) usa o APP_URL.
+     */
+    public static function logoUrlFor(?string $path): ?string
+    {
+        return $path ? url('storage/'.$path) : null;
     }
 
     /** Logo embutida (data URI) para o PDF — o DomPDF não precisa buscar arquivo nem URL. */
