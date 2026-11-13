@@ -142,7 +142,15 @@ Cobrem os critérios de pronto do plano:
 | Expiração | Por inatividade: sem uso por `PONTO_TOKEN_IDLE_DAYS` (30) dias o app volta ao login; cada uso renova o prazo. `ponto:limpar-tokens` roda às 03:00 |
 | Revogação imediata | Sair, RH desconectar/liberar outro aparelho, colaborador desativado e troca de senha apagam os tokens |
 | Esqueci minha senha | Painel (`/esqueci-senha`) e app (`/api/esqueci-senha`). Link de 60 min, uso único, enviado pela fila; resposta igual exista ou não o e-mail; limite por IP e por e-mail. A troca derruba os tokens, mas o aparelho continua liberado |
+| Biometria do celular | WebAuthn (padrão das passkeys). Só no celular: o colaborador liga em Configurações, o celular pede digital/rosto/bloqueio de tela e cria uma chave **presa ao aparelho liberado**. O servidor guarda só a chave pública; a biometria nunca sai do celular. Com ela ligada, **toda batida exige** a assinatura (desafio de uso único, 5 min, verificação do usuário obrigatória, contador anti-clonagem). Trocar/desconectar o aparelho apaga a credencial. Exclusiva com o reconhecimento facial (ainda "em breve") |
 | Armazenamento no app | O token fica no `localStorage`. Em produção, sirva a PWA com HTTPS e cabeçalho CSP restrito (`script-src 'self'`) |
+
+### Biometria em celular de verdade
+
+O WebAuthn só funciona em **HTTPS** (ou em `localhost`, no próprio aparelho). Para testar num celular:
+publique o app com HTTPS (ou use um túnel HTTPS para o `localhost:5173`) e ajuste no `ponto-api/.env`:
+`PWA_URL=https://seu-dominio-do-app` (o domínio vira o `rp_id`; ou defina `PONTO_WEBAUTHN_RP_ID`).
+A credencial vale só para aquele domínio: mudar o domínio do app exige cadastrar a biometria de novo.
 
 ## Arquivos fiscais (Portaria 671/2021)
 

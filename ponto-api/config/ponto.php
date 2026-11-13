@@ -32,6 +32,15 @@ return [
     // PONTO_OPENSSL_BIN="C:/Program Files/Git/mingw64/bin/openssl.exe"
     'openssl_bin' => env('PONTO_OPENSSL_BIN', 'openssl'),
 
+    // Endereço do app do colaborador (PWA).
+    'pwa_url' => env('PWA_URL', 'http://localhost:5173'),
+
+    // Biometria do celular (WebAuthn). rp_id = domínio do app, sem porta (padrão: host do PWA_URL).
+    // Exige HTTPS em produção; em desenvolvimento funciona em "localhost".
+    'webauthn' => [
+        'rp_id' => env('PONTO_WEBAUTHN_RP_ID'),
+    ],
+
     // Token do app: expira se ficar sem uso por N dias (renova sozinho a cada uso).
     'token_idle_days' => (int) env('PONTO_TOKEN_IDLE_DAYS', 30),
 ];

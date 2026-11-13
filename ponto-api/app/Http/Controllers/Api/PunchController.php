@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TimeEntryResource;
+use App\Models\Device;
 use App\Models\TimeEntry;
+use App\Services\BiometricService;
 use App\Services\MonthlyReportService;
 use App\Services\TimeEntryService;
 use App\Support\ContextCache;
@@ -24,7 +26,7 @@ class PunchController extends Controller
      * Cerca virtual (opcional): só aceita a batida dentro do raio de um local cadastrado.
      * Resposta já traz tudo que a tela precisa (comprovante, marcações de hoje, próximo tipo).
      */
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, BiometricService $biometric): JsonResponse
     {
         $ctx = ContextCache::employee($request->user());
         abort_unless($ctx && $ctx['active'], 403, 'Usuário sem cadastro de funcionário ativo.');
@@ -37,10 +39,18 @@ class PunchController extends Controller
             'longitude' => [$requireLocation ? 'required' : 'nullable', 'numeric', 'between:-180,180'],
             'accuracy' => ['nullable', 'numeric', 'min:0'],
             'request_id' => ['nullable', 'uuid'],
+            'webauthn' => ['nullable', 'array'],
         ], [
             'latitude.required' => $locationMessage,
             'longitude.required' => $locationMessage,
         ]);
+
+        // Biometria do celular: com credencial cadastrada no aparelho, a batida exige a assinatura.
+        // Reenvio da mesma batida (request_id já gravado) não pede de novo: o serviço só devolve o registro.
+        $device = ContextCache::device((int) $request->attributes->get('device_id'));
+        if (($device['biometric'] ?? false) && ! $this->alreadyRegistered($ctx, $data['request_id'] ?? null)) {
+            $biometric->verify(Device::findOrFail($device['id']), $data['webauthn'] ?? null);
+        }
 
         // Cerca virtual: só aceita dentro do raio de um local cadastrado pelo RH.
         if ($ctx['geofence'] ?? null) {
@@ -81,6 +91,14 @@ class PunchController extends Controller
             'next_type_label' => TimeEntry::TYPES[$next],
             'replayed' => $replayed,
         ], $replayed ? 200 : 201);
+    }
+
+    private function alreadyRegistered(array $ctx, ?string $requestId): bool
+    {
+        return $requestId !== null && TimeEntry::forCompany($ctx['company_id'])
+            ->where('employee_id', $ctx['employee_id'])
+            ->where('request_id', $requestId)
+            ->exists();
     }
 
     public function receipt(Request $request, TimeEntry $entry): JsonResponse

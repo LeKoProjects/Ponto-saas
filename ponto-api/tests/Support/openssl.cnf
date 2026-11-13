@@ -1,0 +1,4 @@
+# OpenSSL mínimo para gerar chaves nos testes (o PHP do Windows não traz openssl.cnf)
+[ req ]
+distinguished_name = dn
+[ dn ]

@@ -1,6 +1,12 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import { post, webUrl } from '../api';
+import {
+    AVAILABILITY_TEXT,
+    availability as biometricAvailability,
+    disable as disableBiometric,
+    register as registerBiometric,
+} from '../biometric';
 import { describeDevice } from '../device';
 import { prefs, session } from '../session';
 import { THEMES, setTheme, themeApplied, themePref } from '../theme';
@@ -51,29 +57,70 @@ const sync = async () => {
 };
 
 // ---- Confirmação na batida: biometria OU reconhecimento facial (um exclui o outro) ----
-// Por enquanto só guardamos a preferência; a confirmação será implementada depois.
-// Valores: 'none' | 'biometric' | 'facial'. Migra a preferência antiga "biometric: true".
-const VERIFY_LABEL = { biometric: 'Biometria', facial: 'Reconhecimento facial' };
-const verify = ref(prefs.get('verify_method') ?? (prefs.get('biometric') === true ? 'biometric' : 'none'));
+// Biometria: real, pelo celular (WebAuthn) — quem manda é o servidor (binding.biometric).
+// Reconhecimento facial: por enquanto só a preferência (selo "Em breve").
+const biometricState = ref('desktop'); // ok | desktop | insecure | unsupported
+const biometricOn = computed(() => !!binding.value?.biometric);
+const facialOn = ref(prefs.get('verify_method') === 'facial');
+const bioBusy = ref(false);
+const bioError = ref('');
 const verifyNotice = ref('');
 let noticeTimer = null;
 
-const toggleVerify = (method) => {
-    const previous = verify.value;
-    verify.value = previous === method ? 'none' : method;
-    prefs.set('verify_method', verify.value);
-    prefs.set('biometric', verify.value === 'biometric'); // compatibilidade com versões anteriores
-
+const notice = (msg) => {
     clearTimeout(noticeTimer);
-    verifyNotice.value =
-        verify.value !== 'none' && previous !== 'none' && previous !== verify.value
-            ? `${VERIFY_LABEL[previous]} desligada: só um modo de confirmação pode ficar ativo.`
-            : '';
-    if (verifyNotice.value) noticeTimer = setTimeout(() => (verifyNotice.value = ''), 4500);
+    verifyNotice.value = msg;
+    if (msg) noticeTimer = setTimeout(() => (verifyNotice.value = ''), 4500);
+};
+const saveBinding = (dev) => {
+    binding.value = dev;
+    session.saveDevice(dev);
+};
+
+const toggleBiometric = async (event) => {
+    if (bioBusy.value) return;
+    bioError.value = '';
+    bioBusy.value = true;
+    try {
+        if (biometricOn.value) {
+            saveBinding(await disableBiometric());
+            notice('');
+        } else {
+            saveBinding(await registerBiometric()); // o celular pede a digital/rosto agora
+            if (facialOn.value) {
+                facialOn.value = false;
+                prefs.set('verify_method', 'biometric');
+                notice('Reconhecimento facial desligado: só um modo de confirmação pode ficar ativo.');
+            }
+            prefs.set('verify_method', 'biometric');
+        }
+    } catch (e) {
+        bioError.value = e.message;
+    } finally {
+        bioBusy.value = false;
+        if (event?.target) event.target.checked = biometricOn.value; // reflete o estado real
+    }
+};
+
+const toggleFacial = async () => {
+    bioError.value = '';
+    facialOn.value = !facialOn.value;
+    prefs.set('verify_method', facialOn.value ? 'facial' : 'none');
+    if (facialOn.value && biometricOn.value) {
+        try {
+            saveBinding(await disableBiometric());
+            notice('Biometria desligada: só um modo de confirmação pode ficar ativo.');
+        } catch (e) {
+            facialOn.value = false;
+            prefs.set('verify_method', 'biometric');
+            bioError.value = e.message;
+        }
+    }
 };
 
 onMounted(async () => {
     device.value = await describeDevice();
+    biometricState.value = await biometricAvailability();
 });
 </script>
 
@@ -158,22 +205,41 @@ onMounted(async () => {
                         <i class="bi bi-fingerprint fs-4 text-primary"></i>
                         <label for="bio" class="flex-grow-1 mb-0">
                             <div class="fw-semibold">Bater ponto com biometria</div>
-                            <div class="small text-muted">Pedir a digital antes de registrar</div>
+                            <div class="small text-muted">Digital, rosto ou bloqueio de tela do celular</div>
                         </label>
+                        <span v-if="bioBusy" class="spinner-border spinner-border-sm text-primary"></span>
                         <div class="form-check form-switch m-0">
-                            <input id="bio" class="form-check-input fs-4" type="checkbox" role="switch" :checked="verify === 'biometric'" @change="toggleVerify('biometric')" />
+                            <input
+                                id="bio"
+                                class="form-check-input fs-4"
+                                type="checkbox"
+                                role="switch"
+                                :checked="biometricOn"
+                                :disabled="bioBusy || (biometricState !== 'ok' && !biometricOn)"
+                                @change="toggleBiometric"
+                            />
                         </div>
                     </div>
+                    <div v-if="biometricOn" class="small mt-2 text-success d-flex gap-1">
+                        <i class="bi bi-shield-check"></i>
+                        <span>Ativa neste celular<template v-if="binding?.biometric_since"> desde {{ binding.biometric_since }}</template>: toda batida pede a sua biometria.</span>
+                    </div>
+                    <div v-else-if="biometricState !== 'ok'" class="small mt-2 text-muted d-flex gap-1">
+                        <i class="bi bi-info-circle"></i><span>{{ AVAILABILITY_TEXT[biometricState] }}</span>
+                    </div>
+                    <Transition name="alert">
+                        <div v-if="bioError" class="small mt-2 text-danger d-flex gap-1"><i class="bi bi-exclamation-circle"></i><span>{{ bioError }}</span></div>
+                    </Transition>
                 </li>
                 <li class="list-group-item">
                     <div class="d-flex align-items-center gap-3">
                         <i class="bi bi-person-bounding-box fs-4 text-primary"></i>
                         <label for="face" class="flex-grow-1 mb-0">
-                            <div class="fw-semibold">Bater ponto com reconhecimento facial</div>
+                            <div class="fw-semibold">Bater ponto com reconhecimento facial <span class="badge text-bg-warning align-middle">Em breve</span></div>
                             <div class="small text-muted">Confirmar pelo rosto antes de registrar</div>
                         </label>
                         <div class="form-check form-switch m-0">
-                            <input id="face" class="form-check-input fs-4" type="checkbox" role="switch" :checked="verify === 'facial'" @change="toggleVerify('facial')" />
+                            <input id="face" class="form-check-input fs-4" type="checkbox" role="switch" :checked="facialOn" :disabled="bioBusy" @change="toggleFacial" />
                         </div>
                     </div>
                 </li>
@@ -181,10 +247,8 @@ onMounted(async () => {
                     <Transition name="alert">
                         <div v-if="verifyNotice" class="text-primary mb-2"><i class="bi bi-info-circle"></i> {{ verifyNotice }}</div>
                     </Transition>
-                    <div class="d-flex align-items-start gap-1">
-                        <span class="badge text-bg-warning">Em breve</span>
-                        <span>Escolha só um modo: ligar a biometria desliga o reconhecimento facial, e vice-versa. A confirmação ainda não está ativa: por enquanto só guardamos sua preferência.</span>
-                    </div>
+                    Escolha só um modo: ligar a biometria desliga o reconhecimento facial, e vice-versa.
+                    O reconhecimento facial ainda não está ativo: por enquanto só guardamos sua preferência.
                 </li>
             </ul>
         </div>
