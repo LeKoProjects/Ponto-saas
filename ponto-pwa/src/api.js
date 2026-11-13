@@ -1,7 +1,18 @@
 // Cliente da API (Sanctum token). Convenção do projeto: todas as chamadas via POST.
 import { session } from './session';
 
-const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+/**
+ * Endereço da API. Em desenvolvimento ela fica na porta 8000 do mesmo computador.
+ * Quando o app é aberto pela rede (ex.: celular em http://10.1.40.5:5173), "localhost"
+ * apontaria para o próprio celular — então usamos o mesmo endereço pelo qual o app foi aberto.
+ */
+const apiBase = () => {
+    const configured = import.meta.env.VITE_API_URL || `${location.protocol}//${location.hostname}:8000/api`;
+    const isLocal = (host) => host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
+    if (isLocal(location.hostname)) return configured;
+    return configured.replace(/^(https?:\/\/)(localhost|127\.0\.0\.1|\[::1\])(?=[:/])/, `$1${location.hostname}`);
+};
+const BASE = apiBase();
 const TOKEN_KEY = 'ponto_token';
 
 /** Endereço de uma página do servidor (ex.: política de privacidade), a partir da URL da API. */

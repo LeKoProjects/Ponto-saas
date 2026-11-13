@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TimeEntryResource;
+use App\Models\Company;
 use App\Models\TimeEntry;
 use App\Models\User;
 use App\Services\DeviceService;
@@ -106,7 +107,7 @@ class AuthController extends Controller
                 'company' => $ctx['company_name'],
                 'company_id' => $ctx['company_id'],
                 'cnpj' => $ctx['cnpj'],
-                'logo_url' => $ctx['logo_url'] ?? null,
+                'logo_url' => Company::logoUrlFor($ctx['logo_path'] ?? null),
                 'schedule' => $ctx['schedule'],
                 'require_location' => $ctx['require_location'],
                 // Nomes e raios dos locais permitidos (sem coordenadas) para o app avisar o colaborador.

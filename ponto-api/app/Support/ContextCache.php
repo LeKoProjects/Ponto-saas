@@ -54,7 +54,7 @@ class ContextCache
             'cnpj' => $employee->company->cnpj,
             'legal_name' => $employee->company->legal_name,
             'company_name' => $employee->company->displayName(),
-            'logo_url' => $employee->company->logoUrl(),
+            'logo_path' => $employee->company->logo_path, // a URL é montada por requisição (localhost ou IP da rede)
             'privacy_email' => $employee->company->privacy_email,
             // Cerca virtual ligada também torna a localização obrigatória.
             'require_location' => (bool) $employee->company->require_location || $geofence !== null,

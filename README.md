@@ -96,6 +96,21 @@ Como o Docker está configurado:
 - **Dentro do Docker** os serviços se acham pelo nome (`postgres`, `redis`, `mailpit`): o `docker-compose.yml` sobrescreve `DB_HOST`, `REDIS_HOST`, `MAIL_HOST` e `PONTO_OPENSSL_BIN` do `.env`.
 - **Testes no container**: `docker compose exec php php artisan test`. Sempre usam o banco `ponto_test`; uma trava bloqueia os testes se o banco não terminar em `_test`.
 
+### Acessar pelo celular (mesma rede Wi-Fi)
+
+Com o projeto rodando (Docker ou local), abra no celular o **IP do computador** em vez de `localhost`:
+
+| O quê | Endereço |
+| --- | --- |
+| App do colaborador | `http://IP-DO-COMPUTADOR:5173` |
+| Painel | `http://IP-DO-COMPUTADOR:8000` |
+
+- Descubra o IP com `ipconfig` (campo "Endereço IPv4" do Wi-Fi). O celular precisa estar na mesma rede.
+- O app chama a API pelo mesmo endereço em que foi aberto (troca `localhost` pelo IP sozinho), e as logos também.
+- Rodando sem Docker, suba com `php artisan serve --host=0.0.0.0` e `npm run dev -- --host`.
+- Pela rede local o endereço é `http://` (sem HTTPS): tudo funciona, **menos a biometria**, que o navegador só libera em HTTPS (ver abaixo).
+- Redes de empresa ou de visitantes às vezes isolam os aparelhos entre si; nesse caso use outra rede ou o roteador do celular.
+
 ### Usuários de demonstração (senha `password`)
 
 | E-mail | Perfil | Onde |
