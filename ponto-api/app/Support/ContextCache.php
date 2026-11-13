@@ -91,7 +91,7 @@ class ContextCache
         return Cache::remember("ponto:ctx:device:{$deviceId}", self::TTL_SECONDS, function () use ($deviceId) {
             $device = Device::withoutGlobalScope('company')->find($deviceId);
 
-            return $device ? $device->only(['id', 'employee_id', 'status']) + ['api' => $device->toApiArray()] : null;
+            return $device ? $device->only(['id', 'employee_id', 'status']) + ['biometric' => $device->hasBiometric(), 'api' => $device->toApiArray()] : null;
         });
     }
 

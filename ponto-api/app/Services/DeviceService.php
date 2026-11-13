@@ -152,9 +152,18 @@ class DeviceService
         return $device;
     }
 
-    /** Apaga os tokens do aparelho: o app recebe 401 e volta para o login. */
+    /**
+     * Apaga os tokens do aparelho (o app recebe 401 e volta para o login)
+     * e a biometria cadastrada nele: se voltar a ser liberado, cadastra de novo.
+     */
     private function disconnect(Device $device): void
     {
         PersonalAccessToken::where('device_id', $device->id)->delete();
+        $device->forceFill([
+            'webauthn_credential_id' => null,
+            'webauthn_public_key' => null,
+            'webauthn_sign_count' => 0,
+            'webauthn_registered_at' => null,
+        ])->save();
     }
 }

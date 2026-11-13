@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { ApiError, post } from '../api';
+import { confirm as confirmBiometric } from '../biometric';
 import { geo } from '../geo';
 import { session, uuid } from '../session';
 
@@ -12,6 +13,7 @@ const cachedToday = session.today();
 const entries = ref(cachedToday?.entries ?? []);
 const nextTypeLabel = ref(cachedToday?.nextTypeLabel ?? 'Registrar');
 const synced = ref(false);
+const biometricOn = ref(!!session.device()?.biometric); // biometria cadastrada neste aparelho
 
 const error = ref('');
 const loading = ref(false);
@@ -40,7 +42,10 @@ const load = async () => {
         offset.value = new Date(me.server_time).getTime() - Date.now();
         profile.value = me.profile;
         session.saveProfile(me.profile);
-        if (me.device) session.saveDevice(me.device);
+        if (me.device) {
+            session.saveDevice(me.device);
+            biometricOn.value = !!me.device.biometric;
+        }
         applyToday(me.today, me.next_type, me.next_type_label);
         synced.value = true;
     } catch (e) {
@@ -76,6 +81,11 @@ const punch = async () => {
     status.value = '';
     try {
         const body = { request_id: uuid() };
+        // Biometria cadastrada neste aparelho: o celular pede a digital/rosto antes de registrar.
+        if (session.device()?.biometric) {
+            status.value = 'Confirme com a biometria…';
+            body.webauthn = await confirmBiometric();
+        }
         if (profile.value?.require_location) {
             status.value = 'Obtendo localização…';
             Object.assign(body, await geo.current());
@@ -94,8 +104,8 @@ const punch = async () => {
         setTimeout(() => (receipt.value = res.receipt), 450);
     } catch (e) {
         error.value = e.message;
-        // A regra de GPS pode ter mudado: atualiza o perfil.
-        if (e.errors?.latitude || e.status === 403) load();
+        // A regra de GPS ou a biometria do aparelho podem ter mudado: atualiza o perfil.
+        if (e.errors?.latitude || e.errors?.biometria || e.status === 403) load();
     } finally {
         loading.value = false;
         status.value = '';
@@ -161,6 +171,9 @@ onUnmounted(() => {
             </span>
         </div>
 
+        <p v-if="biometricOn" class="text-center small text-muted mb-1">
+            <i class="bi bi-fingerprint text-primary"></i> O ponto é confirmado com a biometria do celular.
+        </p>
         <p v-if="profile?.geofence" class="text-center small text-muted mb-4">
             <i class="bi bi-pin-map-fill text-primary"></i> Ponto liberado só em:
             <b>{{ profile.geofence.map((l) => l.name).join(', ') }}</b>.

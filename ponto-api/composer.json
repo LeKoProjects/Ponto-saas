@@ -13,6 +13,7 @@
         "laravel/horizon": "^5.50",
         "laravel/sanctum": "^4.3",
         "laravel/tinker": "^2.10.1",
+        "lbuchs/webauthn": "^2.2",
         "predis/predis": "^3.7"
     },
     "require-dev": {

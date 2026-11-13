@@ -105,6 +105,10 @@ All PWA API calls use `POST` (including reads). Endpoints require `Authorization
 - `src/theme.js` — dark mode / system theme
 - Views: `LoginView`, `DeviceGateView`, `PunchView`, `HistoryView`, `SettingsView`
 
+### Phone biometrics (WebAuthn)
+
+`BiometricService` (lib `lbuchs/webauthn`, attestation `none`). One credential per approved `devices` row (`webauthn_*` columns, public key only, hidden from API). PWA `src/biometric.js` offers it only when `isMobile()` and a platform authenticator exists. `/api/biometria/{opcoes,cadastrar,desafio,desativar}`; when a device has a credential, `PunchController` requires a valid `webauthn` assertion (single-use cached challenge, UV required) unless the `request_id` was already registered (replay). `DeviceService::disconnect` wipes the credential. RP ID = host of `PWA_URL` (or `PONTO_WEBAUTHN_RP_ID`); needs HTTPS except on localhost. Tests use `tests/Support/FakeAuthenticator.php` (software ES256 authenticator).
+
 ### AFD Export
 
 Painel → **Arquivos fiscais**: generates a `.zip` with the AFD `.txt` and detached `.p7s` signature. The certificate password is entered at export time (never stored). Certificate at `storage/app/private/certs/ponto.pfx` (`PONTO_CERT_PATH`). Uses CAdES-BES if OpenSSL ≥ 3.2, otherwise CMS.

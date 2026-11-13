@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AdjustmentController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BiometricController;
 use App\Http\Controllers\Api\PunchController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,5 +24,13 @@ Route::middleware(['auth:sanctum', 'ability:ponto', 'tenant'])->group(function (
         Route::post('/comprovante/{entry}', [PunchController::class, 'receipt']);
         Route::post('/ajustes', [AdjustmentController::class, 'store'])->middleware('throttle:20,1');
         Route::post('/espelho/pdf', [AdjustmentController::class, 'pdf']);
+
+        // Biometria do celular (WebAuthn).
+        Route::middleware('throttle:30,1')->group(function () {
+            Route::post('/biometria/opcoes', [BiometricController::class, 'registrationOptions']);
+            Route::post('/biometria/cadastrar', [BiometricController::class, 'register']);
+            Route::post('/biometria/desafio', [BiometricController::class, 'challenge']);
+            Route::post('/biometria/desativar', [BiometricController::class, 'disable']);
+        });
     });
 });
