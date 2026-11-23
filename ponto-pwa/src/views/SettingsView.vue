@@ -58,10 +58,12 @@ const sync = async () => {
 
 // ---- Confirmação na batida: biometria OU reconhecimento facial (um exclui o outro) ----
 // Biometria: real, pelo celular (WebAuthn) — quem manda é o servidor (binding.biometric).
-// Reconhecimento facial: por enquanto só a preferência (selo "Em breve").
+// Reconhecimento facial: ainda não implementado — fica escondido (VITE_FEATURE_FACIAL=true mostra).
+// Planejamento em docs/ROADMAP.md; nada do que ainda não funciona aparece para o usuário.
+const FACIAL_ENABLED = import.meta.env.VITE_FEATURE_FACIAL === 'true';
 const biometricState = ref('desktop'); // ok | desktop | insecure | unsupported
 const biometricOn = computed(() => !!binding.value?.biometric);
-const facialOn = ref(prefs.get('verify_method') === 'facial');
+const facialOn = ref(FACIAL_ENABLED && prefs.get('verify_method') === 'facial');
 const bioBusy = ref(false);
 const bioError = ref('');
 const verifyNotice = ref('');
@@ -231,11 +233,11 @@ onMounted(async () => {
                         <div v-if="bioError" class="small mt-2 text-danger d-flex gap-1"><i class="bi bi-exclamation-circle"></i><span>{{ bioError }}</span></div>
                     </Transition>
                 </li>
-                <li class="list-group-item">
+                <li v-if="FACIAL_ENABLED" class="list-group-item">
                     <div class="d-flex align-items-center gap-3">
                         <i class="bi bi-person-bounding-box fs-4 text-primary"></i>
                         <label for="face" class="flex-grow-1 mb-0">
-                            <div class="fw-semibold">Bater ponto com reconhecimento facial <span class="badge text-bg-warning align-middle">Em breve</span></div>
+                            <div class="fw-semibold">Bater ponto com reconhecimento facial</div>
                             <div class="small text-muted">Confirmar pelo rosto antes de registrar</div>
                         </label>
                         <div class="form-check form-switch m-0">
@@ -243,12 +245,11 @@ onMounted(async () => {
                         </div>
                     </div>
                 </li>
-                <li class="list-group-item small text-muted">
+                <li v-if="FACIAL_ENABLED" class="list-group-item small text-muted">
                     <Transition name="alert">
                         <div v-if="verifyNotice" class="text-primary mb-2"><i class="bi bi-info-circle"></i> {{ verifyNotice }}</div>
                     </Transition>
                     Escolha só um modo: ligar a biometria desliga o reconhecimento facial, e vice-versa.
-                    O reconhecimento facial ainda não está ativo: por enquanto só guardamos sua preferência.
                 </li>
             </ul>
         </div>

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Device;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use lbuchs\WebAuthn\Binary\ByteBuffer;
 use lbuchs\WebAuthn\WebAuthn;
@@ -62,7 +63,8 @@ class BiometricService
                 false,
             );
         } catch (WebAuthnException $e) {
-            throw ValidationException::withMessages(['biometria' => 'Não foi possível cadastrar a biometria: '.$e->getMessage()]);
+            Log::warning('Cadastro de biometria recusado', ['device_id' => $device->id, 'motivo' => $e->getMessage()]);
+            throw ValidationException::withMessages(['biometria' => 'Não foi possível cadastrar a biometria. Tente de novo.']);
         }
 
         $device->forceFill([
@@ -127,6 +129,7 @@ class BiometricService
                 true,
             );
         } catch (WebAuthnException $e) {
+            Log::warning('Biometria não confirmada', ['device_id' => $device->id, 'motivo' => $e->getMessage()]);
             $fail('Biometria não confirmada. Tente de novo.');
         }
 

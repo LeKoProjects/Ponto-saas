@@ -82,7 +82,7 @@ const sections = [
                         <table class="table table-sm small">
                             <thead><tr><th>Finalidade</th><th>Base legal (LGPD)</th></tr></thead>
                             <tbody>
-                                <tr><td>Registrar e guardar a jornada, gerar espelho de ponto, comprovante e arquivos fiscais (AFD/AEJ)</td><td>Cumprimento de obrigação legal (art. 7º, II): CLT art. 74 e Portaria 671/2021</td></tr>
+                                <tr><td>Registrar e guardar a jornada, gerar espelho de ponto, comprovante e arquivos fiscais (AFD)</td><td>Cumprimento de obrigação legal (art. 7º, II): CLT art. 74 e Portaria 671/2021</td></tr>
                                 <tr><td>Calcular horas extras, atrasos, faltas e adicional noturno para a folha</td><td>Execução do contrato de trabalho (art. 7º, V) e obrigação legal</td></tr>
                                 <tr><td>Enviar o comprovante de cada marcação por e-mail</td><td>Obrigação legal (Portaria 671/2021)</td></tr>
                                 <tr><td>Vincular o acesso a um único aparelho, auditoria e prevenção a fraudes</td><td>Legítimo interesse (art. 7º, IX) e exercício regular de direitos (art. 7º, VI)</td></tr>

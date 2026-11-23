@@ -3,7 +3,10 @@
 MVP de ponto eletrônico **REP-P** (Portaria MTP nº 671/2021) para empresas de 5 a 50 funcionários:
 ponto pelo celular em 2 toques, painel "quem está trabalhando agora", espelho mensal pronto para a folha e exportação para o contador.
 
-> ⚠️ **Conformidade:** a arquitetura segue os requisitos da Portaria 671/2021 (marcação imutável, NSR, comprovante, hash encadeado, hora do servidor), mas **antes de vender** é preciso validar com especialista e concluir: registro no INPI, atestado técnico, AFD/AEJ no leiaute oficial e assinatura ICP-Brasil (fase 2).
+> ⚠️ **Conformidade:** a arquitetura segue os requisitos da Portaria 671/2021 (marcação imutável, NSR, comprovante, hash encadeado, hora do servidor). O que ainda falta para vender com valor legal está em [docs/ROADMAP.md](docs/ROADMAP.md).
+
+**Documentação:** [docs/ROADMAP.md](docs/ROADMAP.md) (tudo o que é planejado, pendente ou próximo passo) · [docs/CONFIGURACAO.md](docs/CONFIGURACAO.md) (variáveis, certificado, produção).
+Regra do projeto: **a interface mostra só o que já funciona** — pendências, próximos passos e nomes de variáveis ficam só na documentação.
 
 ## Estrutura do monorepo
 
@@ -190,8 +193,7 @@ Painel → **Arquivos fiscais** (dono/RH): baixa um `.zip` com o **AFD** (`.txt`
 
 - Registros: cabeçalho (tipo 1), marcações do REP-P (tipo 7, com hash SHA-256 encadeado) e trailer (tipo 9), mais a linha `ASSINATURA_DIGITAL_EM_ARQUIVO_P7S`.
 - Assinatura **CAdES-BES** quando o OpenSSL do servidor é 3.2+ (imagem Docker), senão CMS destacado. Certificado A1 em `storage/app/private/certs/ponto.pfx` (`PONTO_CERT_PATH`). A **senha do certificado é digitada na tela a cada exportação** (POST, não vai na URL, não é salva nem registrada); senha errada fica na auditoria e há limite de 10 tentativas por minuto.
-- Para valor legal: certificado **ICP-Brasil** (e-CNPJ A1) do desenvolvedor, `PONTO_DEVELOPER_CNPJ` e `PONTO_INPI_REGISTRATION` preenchidos.
-- Pendente (validar com o especialista): registros tipo 2, 4, 5 e 6 com NSR próprio, **AEJ** e comprovante em PDF assinado (PAdES).
+- Certificado, CNPJ do desenvolvedor e registro no INPI: [docs/CONFIGURACAO.md](docs/CONFIGURACAO.md). Pendências do AFD/AEJ: [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Endpoints da API (PWA)
 
@@ -210,23 +212,6 @@ Todos via `POST`, autenticados com `Authorization: Bearer <token>`.
 | `/api/espelho/pdf` | PDF do espelho do mês (`month=YYYY-MM`) |
 | `/api/logout` | revoga o token |
 
-## Roadmap
+## Roadmap e limitações
 
-- [x] Sprint 1 — Base: Docker, Laravel + Postgres, Sanctum, multi-tenant, CI
-- [x] Sprint 2 — Cadastros: empresas, usuários, equipes, jornadas, funcionários
-- [x] Sprint 3 — Marcação: PWA, NSR, hash, comprovante, GPS opcional
-- [x] Sprint 4 — Painel "agora" e cálculo diário
-- [x] Sprint 5 — Espelho PDF/CSV, auditoria, tratamentos
-- [x] Espelho em calendário na PWA + solicitação de ajuste pelo colaborador com aprovação no painel
-- [x] Localização obrigatória configurável pelo RH
-- [x] Política de privacidade (LGPD), logo por empresa, esqueci minha senha, endurecimento do token
-- [x] AFD com assinatura CAdES (.p7s)
-- [ ] Sprint 6 — Deploy na VPS, backup testado (restore real), monitoramento, termos de uso
-- [ ] Fase 2 — Anexo de atestado na solicitação, banco de horas, WhatsApp, cobrança recorrente, AEJ, registros 2/4/5/6 do AFD, comprovante PAdES, INPI e atestado técnico
-
-## Limitações conhecidas do MVP
-
-- Turnos que atravessam a meia-noite são agrupados pelo dia de cada marcação (escalas noturnas entram na fase 3).
-- Banco de horas: tabela `hour_bank_ledger` criada, cálculo e lançamentos na fase 2.
-- Feriados municipais (ex.: Salvador) devem ser cadastrados por empresa; o seeder traz nacionais e o 2 de Julho (BA).
-- Perfis de acesso por coluna `role` (owner, rh, gestor, funcionario, super_admin) — `spatie/laravel-permission` só se surgirem permissões customizadas.
+Tudo o que é planejado, pendente ou limitação conhecida está em **[docs/ROADMAP.md](docs/ROADMAP.md)**.

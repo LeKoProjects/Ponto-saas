@@ -160,8 +160,6 @@ const removeLocation = (l) => {
 
                     <p class="small text-muted mt-3 mb-0">
                         <i class="bi bi-shield-lock"></i> LGPD: ao ativar, a <a href="/privacidade" target="_blank">política de privacidade</a> informa os colaboradores sobre a finalidade da coleta (controle de jornada).
-                        Valide com o especialista se exigir GPS ou restringir o local é compatível com a regra de "não restringir a marcação" da Portaria 671/2021 para o seu caso
-                        (equipes externas, por exemplo, não devem ficar presas a um local).
                     </p>
                 </div>
 

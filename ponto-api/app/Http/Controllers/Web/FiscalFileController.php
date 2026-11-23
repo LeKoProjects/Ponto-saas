@@ -24,8 +24,6 @@ class FiscalFileController extends Controller
         return Inertia::render('FiscalFiles/Index', [
             'certificate_installed' => $this->signer->configured(),
             'certificate' => $this->signer->certificateInfo(),
-            'inpi' => (string) config('ponto.afd.inpi_registration'),
-            'developer' => (string) config('ponto.afd.developer_document'),
             'defaults' => [
                 'from' => $request->old('from', now()->startOfMonth()->toDateString()),
                 'to' => $request->old('to', now()->toDateString()),

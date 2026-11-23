@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -53,7 +54,8 @@ class SignatureService
     public function signDetached(string $content, #[\SensitiveParameter] string $password): array
     {
         if (! $this->configured()) {
-            throw new RuntimeException('Certificado digital não instalado. Em desenvolvimento, rode "php artisan ponto:certificado-teste".');
+            // Detalhes de instalação ficam em docs/CONFIGURACAO.md, nunca na mensagem ao usuário.
+            throw new RuntimeException('Certificado digital não instalado.');
         }
 
         ['cert' => $cert, 'key' => $key, 'chain' => $chain] = $this->open($password);
@@ -91,7 +93,8 @@ class SignatureService
                 $chain ? $files['chain'] : null,
             );
             if (! $ok) {
-                throw new RuntimeException('Falha ao assinar: '.openssl_error_string());
+                Log::error('Falha ao assinar o AFD', ['openssl' => openssl_error_string()]);
+                throw new RuntimeException('Não foi possível assinar o arquivo.');
             }
 
             return ['p7s' => file_get_contents($files['out']), 'profile' => 'CMS'];

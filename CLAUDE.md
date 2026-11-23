@@ -63,6 +63,11 @@ Postgres runs on host port **5433** (not 5432) to avoid conflicts.
 
 **Never run the test suite against the dev database.** Tests use `RefreshDatabase` (wipes the DB). `phpunit.xml` forces `DB_DATABASE=ponto_test` in both `<env>` and `<server>` (Docker env vars live in `$_SERVER`), and `tests/TestCase::createApplication()` aborts unless the database name ends in `_test`.
 
+## Product rules
+
+- **The UI shows only what already works.** Never put roadmap items, "em breve", "próximos passos", "falta configurar" or pending-work cards in the panel or the PWA. Planned/pending items go to `docs/ROADMAP.md`; server configuration goes to `docs/CONFIGURACAO.md`. Unfinished features stay hidden behind a flag (e.g. `VITE_FEATURE_FACIAL`).
+- **User-facing messages never expose internals**: no env var names (`PONTO_*`), artisan commands, file paths or exception text from libraries. Show a plain message and `Log::` the details.
+
 ## Architecture
 
 ### Multi-tenancy
