@@ -10,6 +10,7 @@ use App\Http\Controllers\Web\EmployeeController;
 use App\Http\Controllers\Web\FiscalFileController;
 use App\Http\Controllers\Web\PasswordResetController;
 use App\Http\Controllers\Web\PrivacyController;
+use App\Http\Controllers\Web\ReportController;
 use App\Http\Controllers\Web\SettingsController;
 use App\Http\Controllers\Web\TeamController;
 use App\Http\Controllers\Web\TimesheetController;
@@ -47,6 +48,10 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::get('/espelho', [TimesheetController::class, 'show'])->name('timesheet.show');
         Route::get('/espelho/pdf', [TimesheetController::class, 'pdf'])->name('timesheet.pdf');
         Route::get('/espelho/csv', [TimesheetController::class, 'csv'])->name('timesheet.csv');
+
+        // Relatórios (gestor vê só as equipes que gerencia).
+        Route::get('/relatorios', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/relatorios/exportar/{format}', [ReportController::class, 'export'])->name('reports.export');
 
         Route::get('/ajustes', [AdjustmentController::class, 'index'])->name('adjustments.index');
         Route::post('/ajustes/{adjustment}/aprovar', [AdjustmentController::class, 'approve'])->name('adjustments.approve');

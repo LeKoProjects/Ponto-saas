@@ -22,10 +22,25 @@ class MonthlyReportService
 
     public function forEmployee(Employee $employee, int $year, int $month): array
     {
+        $start = CarbonImmutable::create($year, $month, 1)->startOfDay();
+        $report = $this->forEmployeeRange($employee, $start, $start->endOfMonth());
+        $report['period'] = ['year' => $year, 'month' => $month, 'label' => $start->locale('pt_BR')->translatedFormat('F/Y')];
+
+        return $report;
+    }
+
+    /**
+     * Mesmo cálculo do espelho para qualquer período (usado também pelos relatórios).
+     * Com $withRaw, cada dia traz também (chaves com "_", só para uso interno):
+     *   _effective — horários efetivos (CarbonImmutable, já com ajustes);
+     *   _entries   — marcações originais com coordenadas, para o relatório de local.
+     */
+    public function forEmployeeRange(Employee $employee, CarbonImmutable $start, CarbonImmutable $end, bool $withRaw = false): array
+    {
         $employee->loadMissing('user', 'workSchedule', 'team');
         $schedule = $employee->workSchedule;
-        $start = CarbonImmutable::create($year, $month, 1)->startOfDay();
-        $end = $start->endOfMonth();
+        $start = $start->startOfDay();
+        $end = $end->endOfDay();
 
         $entries = TimeEntry::forCompany($employee->company_id)
             ->where('employee_id', $employee->id)
@@ -73,6 +88,8 @@ class MonthlyReportService
                     'type_label' => TimeEntry::TYPES[$e->type] ?? $e->type,
                     'source' => 'original',
                     'discarded' => in_array($e->id, $discarded, true),
+                    'latitude' => $e->latitude,
+                    'longitude' => $e->longitude,
                 ];
             }
             foreach ($inclusions->filter(fn ($a) => $a->date->toDateString() === $key) as $a) {
@@ -85,6 +102,8 @@ class MonthlyReportService
                     'type_label' => $a->type === 'alteracao' ? 'Alterada por ajuste' : 'Incluída por ajuste',
                     'source' => $a->type,
                     'discarded' => false,
+                    'latitude' => null,
+                    'longitude' => null,
                 ];
             }
             usort($marks, fn ($a, $b) => $a['at'] <=> $b['at']);
@@ -112,15 +131,21 @@ class MonthlyReportService
             }
             $totals['absences'] += $result['absent'] ? 1 : 0;
 
-            $days[] = [
+            $row = [
                 ...$result,
                 'label' => $day->format('d/m').' '.self::WEEKDAY_LABELS[$day->isoWeekday()],
                 'is_future' => $day->isFuture(),
                 'expected_with_break_minutes' => $result['expected_minutes'] > 0 ? $result['expected_minutes'] + $schedule->break_minutes : 0,
                 'holiday' => $holiday?->name,
-                'marks' => array_map(fn ($m) => array_diff_key($m, ['at' => 1]), $marks),
+                'marks' => array_map(fn ($m) => array_diff_key($m, ['at' => 1, 'latitude' => 1, 'longitude' => 1]), $marks),
                 'requests' => $adjustments->filter(fn ($a) => $a->date->toDateString() === $key)->map->toApiArray()->values()->all(),
             ];
+            if ($withRaw) {
+                $row['_effective'] = $effective;
+                $row['_entries'] = array_values(array_filter($marks, fn ($m) => $m['source'] === 'original'));
+                $row['_requests'] = $adjustments->filter(fn ($a) => $a->date->toDateString() === $key)->values();
+            }
+            $days[] = $row;
         }
 
         return [
@@ -134,7 +159,7 @@ class MonthlyReportService
                 'admission_date' => $employee->admission_date->toDateString(),
                 'team' => $employee->team?->name,
             ],
-            'period' => ['year' => $year, 'month' => $month, 'label' => $start->locale('pt_BR')->translatedFormat('F/Y')],
+            'period' => ['from' => $start->toDateString(), 'to' => $end->toDateString()],
             'days' => $days,
             'totals' => $totals,
         ];

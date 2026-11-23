@@ -167,6 +167,23 @@ publique o app com HTTPS (ou use um túnel HTTPS para o `localhost:5173`) e ajus
 `PWA_URL=https://seu-dominio-do-app` (o domínio vira o `rp_id`; ou defina `PONTO_WEBAUTHN_RP_ID`).
 A credencial vale só para aquele domínio: mudar o domínio do app exige cadastrar a biometria de novo.
 
+## Relatórios
+
+Painel → **Relatórios** (dono, RH e gestor; o gestor vê só as equipes que gerencia). Período de até 93 dias, filtro por equipe e colaborador.
+Todo relatório tem visão **geral** (uma linha por colaborador, quem precisa de atenção primeiro) e **individual** (escolha o colaborador ou clique no nome). Exporta **CSV** (Excel) e **PDF**; a exportação fica na auditoria.
+
+| Relatório | O que mostra |
+| --- | --- |
+| Intervalo de almoço | Saída/volta, tempo de intervalo, mínimo legal (CLT art. 71: 1 h a 2 h acima de 6 h; 15 min de 4 h a 6 h), intervalo curto, sem intervalo, abaixo do previsto, acima de 2 h e tempo suprimido |
+| Batidas fora do local | Cada batida com o local mais próximo, distância e mapa; "mesmo lugar fora" (batidas repetidas no mesmo ponto, ex.: de casa). Depende de locais cadastrados e de "Exigir localização" |
+| Batidas a conferir | Falta, marcações ímpares, batida duplicada (< 5 min), intervalo irregular, mais de 2 h extras (art. 59), interjornada < 11 h (art. 66), trabalho em folga/feriado, batida fora do local, ajuste pendente |
+| Resumo de horas | Previsto, trabalhado, HE 50%/100%, atraso, faltante, noturno, faltas e saldo |
+| Atrasos e faltas | Dias com atraso, total, faltas, horas faltantes e assiduidade |
+| Horas extras e noturno | HE 50%/100%, adicional noturno e dias com mais de 2 h extras |
+| Ajustes de ponto | Pedidos de inclusão/exclusão/alteração por situação e quem decidiu |
+
+Os números usam o mesmo cálculo do espelho, com ajustes aprovados aplicados.
+
 ## Arquivos fiscais (Portaria 671/2021)
 
 Painel → **Arquivos fiscais** (dono/RH): baixa um `.zip` com o **AFD** (`.txt`, leiaute 003, ISO-8859-1, CR+LF) e a **assinatura destacada `.p7s`**.

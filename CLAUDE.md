@@ -89,6 +89,7 @@ Business logic is in `app/Services/`:
 - `TimeCalculationService` — pure function for daily time calculation (normal, overtime, delay, night shift, holiday)
 - `MonthlyReportService` — timesheet with adjustments applied
 - `AfdService` + `SignatureService` — AFD file generation (layout 003, ISO-8859-1) with CAdES-BES detached signature
+- `ReportService` — RH reports (intervalo, local, inconsistencias, resumo, atrasos, extras, ajustes), each with `geral`/`individual` mode; generic output (columns/rows/summary/notes) rendered by `Reports/Index.vue`, CSV and `pdf/report.blade.php`. Built on `MonthlyReportService::forEmployeeRange($emp, $from, $to, withRaw: true)`
 - `AuditLogger` — before/after snapshots on every RH/admin action
 - `DeviceService` — device approval flow; approving one device revokes all others
 

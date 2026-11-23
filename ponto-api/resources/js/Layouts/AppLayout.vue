@@ -16,6 +16,7 @@ const menu = computed(() => {
         { href: '/', icon: 'speedometer2', label: 'Agora' },
         { href: '/espelho', icon: 'calendar3', label: 'Espelho de ponto' },
         { href: '/ajustes', icon: 'pencil-square', label: 'Ajustes', badge: page.props.pending_adjustments },
+        { href: '/relatorios', icon: 'bar-chart-line', label: 'Relatórios' },
     ];
     if (user.value?.can_manage) {
         items.push(
